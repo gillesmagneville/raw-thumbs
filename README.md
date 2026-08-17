@@ -1,4 +1,4 @@
-# raw-thumbnailer
+# raw-thumbs
 
 Thumbnailer RAW pour Nautilus / GNOME Files, écrit en Rust, s'appuyant sur
 **libraw** (bindings FFI via `libraw-sys`) pour couvrir la quasi-totalité
@@ -18,6 +18,15 @@ Dans les deux cas, le décodage est fait par libraw (bibliothèque C liée
 dynamiquement) — Rust n'orchestre que les appels, le redimensionnement
 (crate `image`, filtre Lanczos3) et l'écriture PNG.
 
+## Pourquoi pas le "raw-thumbnailer" existant ?
+
+Il existe déjà un projet nommé `raw-thumbnailer` / `gnome-raw-thumbnailer`
+(gitlab.gnome.org/World/gnome-raw-thumbnailer, maintenu par l'auteur de
+libopenraw, packagé sur SUSE et l'AUR), ainsi qu'un remplaçant en Rust pur
+nommé `miniaturo`. Les deux s'appuient sur **libopenraw**, dont la base de
+formats caméra est historiquement plus restreinte que celle de **libraw**
+— d'où le choix d'un moteur différent et d'un nom distinct pour ce projet.
+
 ## Compilation
 
 Dépendances de build (Ubuntu 26.04) :
@@ -32,7 +41,7 @@ Puis :
 cargo build --release
 ```
 
-Le binaire final se trouve dans `target/release/raw-thumbnailer` (~750 Ko,
+Le binaire final se trouve dans `target/release/raw-thumbs` (~750 Ko,
 lié dynamiquement à `libraw_r`).
 
 ## Installation manuelle
@@ -42,8 +51,8 @@ emplacement système — Nautilus exécute les thumbnailers dans un bac à
 sable et refuse ceux situés dans `$HOME`.
 
 ```bash
-sudo cp target/release/raw-thumbnailer /usr/local/bin/
-sudo cp raw-thumbnailer.thumbnailer /usr/share/thumbnailers/
+sudo cp target/release/raw-thumbs /usr/local/bin/
+sudo cp raw-thumbs.thumbnailer /usr/share/thumbnailers/
 nautilus -q
 rm -rf ~/.cache/thumbnails/*
 ```
@@ -63,7 +72,7 @@ contrôle Debian).
 
 ## Format des types MIME couverts
 
-Voir `raw-thumbnailer.thumbnailer` — la liste peut être étendue si un
+Voir `raw-thumbs.thumbnailer` — la liste peut être étendue si un
 format RAW spécifique n'est pas reconnu (vérifier le type MIME réel avec
 `file --mime-type mon_fichier.xyz` ou `xdg-mime query filetype`).
 

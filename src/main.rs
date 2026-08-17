@@ -1,6 +1,6 @@
 //! Thumbnailer RAW pour Nautilus / GNOME (spec freedesktop.org thumbnailer).
 //!
-//! Appelé par Nautilus comme : raw-thumbnailer %i %o %s
+//! Appelé par Nautilus comme : raw-thumbs %i %o %s
 //!   %i = chemin (ou URI file://) du fichier RAW en entrée
 //!   %o = chemin du PNG de sortie attendu
 //!   %s = taille demandée (le plus grand côté, en pixels)
@@ -58,7 +58,7 @@ fn main() -> ExitCode {
             // Un thumbnailer freedesktop doit échouer silencieusement du
             // point de vue de l'utilisateur : Nautilus retombe sur l'icône
             // générique. On garde le message sur stderr pour le débogage.
-            eprintln!("raw-thumbnailer: {input_path}: {e}");
+            eprintln!("raw-thumbs: {input_path}: {e}");
             ExitCode::FAILURE
         }
     }
