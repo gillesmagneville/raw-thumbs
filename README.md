@@ -47,18 +47,30 @@ lié dynamiquement à `libraw_r`).
 ## Installation manuelle
 
 Comme pour tout thumbnailer Nautilus, le binaire **doit** résider dans un
+emplacement système. Attention : ça ne veut *pas* dire n'importe quel
 emplacement système — Nautilus exécute les thumbnailers dans un bac à
-sable et refuse ceux situés dans `$HOME`.
+sable bubblewrap qui ne monte que `/usr`, `/lib`, `/lib64`, `/proc`,
+`/dev` et le fichier en cours de traitement. **`/usr/local` n'est jamais
+monté** : un binaire installé là est invisible depuis l'intérieur du
+sandbox et échoue silencieusement (`execve` → ENOENT), sans erreur
+visible côté utilisateur — bug GNOME connu, documenté depuis 2018
+(Debian #902288, gnome-desktop#71). Il faut donc installer dans
+`/usr/bin`, pas `/usr/local/bin` :
 
 ```bash
-sudo cp target/release/raw-thumbs /usr/local/bin/
+sudo cp target/release/raw-thumbs /usr/bin/
 sudo cp raw-thumbs.thumbnailer /usr/share/thumbnailers/
-nautilus -q
+killall nautilus
 rm -rf ~/.cache/thumbnails/*
 ```
 
 Ouvrez ensuite un dossier contenant des fichiers RAW dans Nautilus pour
 vérifier que les vignettes apparaissent.
+
+> Installer manuellement dans `/usr/bin` sort du usage prévu par la
+> norme FHS (réservé aux paquets gérés par le gestionnaire de paquets).
+> La solution propre à terme est d'empaqueter en `.deb` (voir
+> ci-dessous), qui installe légitimement dans `/usr/bin` via dpkg.
 
 ## Empaquetage .deb
 
