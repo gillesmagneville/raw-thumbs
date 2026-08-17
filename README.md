@@ -27,24 +27,53 @@ nommé `miniaturo`. Les deux s'appuient sur **libopenraw**, dont la base de
 formats caméra est historiquement plus restreinte que celle de **libraw**
 — d'où le choix d'un moteur différent et d'un nom distinct pour ce projet.
 
-## Compilation
+## Compilation & empaquetage
 
 Dépendances de build (Ubuntu 26.04) :
 
-```
+```bash
 sudo apt install build-essential pkg-config libraw-dev cargo rustc
 ```
 
-Puis :
+**Paquet `.deb`** (méthode recommandée) — `build-deb.sh` suit les mêmes
+principes que celui de [linuxdoctor](https://github.com/gillesmagneville/linuxdoctor)
+(et, plus loin, de Planche-Contact) : versionnage interactif ou par flag,
+`VERSION`/`Cargo.toml` mis à jour uniquement après un build réussi,
+staging dans un dossier temporaire avec permissions normalisées. Utilise
+[fpm](https://fpm.readthedocs.io/) — installer avec
+`gem install --user-install fpm` si absent.
 
+```bash
+./build-deb.sh --patch              # ou --minor / --major / --no-version-change
+./build-deb.sh --patch --yes        # sans confirmation interactive
+./build-deb.sh --clean              # supprime le dossier de build et les .deb générés
 ```
+
+Avant la première utilisation, éditez `MAINTAINER` et `URL` en tête du
+script — ce sont des valeurs à personnaliser. Le paquet généré installe
+le binaire dans `/usr/bin/raw-thumbs`, le fichier `raw-thumbs.thumbnailer`
+dans `/usr/share/thumbnailers/`, déclare une dépendance sur
+`libraw23t64` (le paquet fournissant `libraw_r.so` sur Ubuntu 26.04 —
+à vérifier si vous construisez sur une autre distribution), et affiche
+après installation un rappel pour redémarrer Nautilus :
+
+```bash
+sudo apt install ./raw-thumbs_<version>_amd64.deb
+```
+
+**Compilation seule**, sans empaquetage :
+
+```bash
 cargo build --release
 ```
 
 Le binaire final se trouve dans `target/release/raw-thumbs` (~750 Ko,
 lié dynamiquement à `libraw_r`).
 
-## Installation manuelle
+## Installation manuelle (développement uniquement)
+
+Pour itérer rapidement sans repasser par `build-deb.sh` à chaque
+changement :
 
 Comme pour tout thumbnailer Nautilus, le binaire **doit** résider dans un
 emplacement système. Attention : ça ne veut *pas* dire n'importe quel
@@ -70,17 +99,7 @@ vérifier que les vignettes apparaissent.
 > Installer manuellement dans `/usr/bin` sort du usage prévu par la
 > norme FHS (réservé aux paquets gérés par le gestionnaire de paquets).
 > La solution propre à terme est d'empaqueter en `.deb` (voir
-> ci-dessous), qui installe légitimement dans `/usr/bin` via dpkg.
-
-## Empaquetage .deb
-
-Le binaire et le fichier `.thumbnailer` s'intègrent directement dans le
-même schéma que Planche-Contact (`build-deb.sh`, `postinst`) : il suffit
-d'installer le binaire dans `/usr/bin` et le `.thumbnailer` dans
-`/usr/share/thumbnailers/` via le paquet, sans venv Python à gérer cette
-fois puisque tout est compilé statiquement à l'exception de la liaison
-dynamique vers `libraw_r` (dépendance `libraw` à déclarer dans le
-contrôle Debian).
+> ci-dessus), qui installe légitimement dans `/usr/bin` via dpkg.
 
 ## Format des types MIME couverts
 
