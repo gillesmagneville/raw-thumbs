@@ -109,7 +109,7 @@ format RAW spécifique n'est pas reconnu (vérifier le type MIME réel avec
 
 ## Tests
 
-Validé sur un NEF Nikon réel (30 Mo) : extraction de vignette embarquée
+Validé sur un NEF Nikon réel, un CR2 Canon et un ARW Sony : extraction de vignette embarquée
 ~1 s (dominé par l'identification du fichier par libraw lui-même, pas par
 le code Rust), décodage complet en repli ~6 s. Gestion propre des fichiers
 invalides ou non-RAW (code de sortie non nul, aucun fichier de sortie
