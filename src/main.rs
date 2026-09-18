@@ -86,10 +86,22 @@ fn run(input_path: &str, output_path: &str, target_size: u32) -> Result<(), Stri
         return Err(format!("libraw_open_file a échoué (code {open_result})"));
     }
 
+    // Orientation attendue (0 = aucune, 3 = 180°, 5 = 90° anti-horaire,
+    // 6 = 90° horaire — cf. doc LibRaw sur libraw_image_sizes_t.flip),
+    // déjà connue à ce stade puisque open_file() lit tous les tags
+    // d'orientation lors de l'identification du fichier.
+    let flip = unsafe { (*handle).sizes.flip };
+
     // --- Niveau 1 : vignette embarquée ---
     if let Some(img) = try_extract_embedded_thumb(handle) {
         if let Ok(dynimg) = decode_extracted(img) {
-            return save_resized(dynimg, target_size, output_path);
+            // La vignette embarquée (JPEG en particulier) est le blob tel
+            // que stocké par l'appareil : contrairement à
+            // dcraw_make_mem_image (utilisé au niveau 2), elle n'est PAS
+            // réorientée par libraw en interne. On applique donc nous-mêmes
+            // la rotation ici.
+            let oriented = apply_orientation(dynimg, flip);
+            return save_resized(oriented, target_size, output_path);
         }
         // La vignette embarquée existe mais n'a pas pu être décodée
         // (format exotique/corrompu) : on retente le chemin complet plutôt
@@ -97,9 +109,26 @@ fn run(input_path: &str, output_path: &str, target_size: u32) -> Result<(), Stri
     }
 
     // --- Niveau 2 : décodage RAW complet (repli) ---
+    // Pas d'appel à apply_orientation ici : dcraw_make_mem_image applique
+    // déjà la rotation lui-même en phase de sortie (comportement par
+    // défaut de libraw, user_flip valant -1 tant qu'on ne le modifie pas).
+    // L'appliquer une deuxième fois tournerait l'image deux fois.
     let img = full_decode(handle)?;
     let dynimg = decode_extracted(img).map_err(|e| format!("décodage complet: {e}"))?;
     save_resized(dynimg, target_size, output_path)
+}
+
+/// Applique la rotation indiquée par `libraw_image_sizes_t.flip` à une
+/// vignette extraite telle quelle (chemin "vignette embarquée" uniquement —
+/// voir le commentaire dans `run()` pour pourquoi le chemin décodage complet
+/// n'en a pas besoin).
+fn apply_orientation(img: DynamicImage, flip: i32) -> DynamicImage {
+    match flip {
+        3 => img.rotate180(),
+        5 => img.rotate270(), // 90° anti-horaire
+        6 => img.rotate90(),  // 90° horaire
+        _ => img,
+    }
 }
 
 /// Tente d'extraire la vignette JPEG/bitmap embarquée dans le fichier RAW.

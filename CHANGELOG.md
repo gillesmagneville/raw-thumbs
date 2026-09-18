@@ -6,6 +6,20 @@ fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
+## [Unreleased]
+
+### Corrigé
+
+- Orientation EXIF/MakerNote non appliquée sur le chemin vignette
+  embarquée (`libraw_unpack_thumb`/`libraw_dcraw_make_mem_thumb`) : les
+  photos prises en portrait ou avec l'appareil tourné apparaissaient
+  pivotées à 90°/180°. Le chemin décodage complet (`dcraw_make_mem_image`)
+  n'était pas affecté — libraw y applique déjà la rotation en interne.
+  Corrigé en lisant `libraw_image_sizes_t.flip` et en appliquant la
+  rotation correspondante nous-mêmes uniquement sur la vignette
+  embarquée. Validé sur un DNG iPhone (flip=6, mire ColorChecker) :
+  logo et texte à l'endroit après correction, à l'envers avant.
+
 ## [0.1.0] - 2026-08-18
 
 ### Ajouté
