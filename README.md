@@ -1,5 +1,12 @@
 # raw-thumbs
 
+🇬🇧 [English version](README.en.md)
+
+**Ubuntu n'a plus de thumbnailer RAW dans ses dépôts depuis la 20.04 LTS**
+(le dernier, `gnome-raw-thumbnailer`, date de la 18.04). raw-thumbs rétablit
+les vignettes RAW dans Nautilus, y compris pour les fichiers sans aperçu
+intégré.
+
 Thumbnailer RAW pour Nautilus / GNOME Files, écrit en Rust, s'appuyant sur
 **libraw** (bindings FFI via `libraw-sys`) pour couvrir la quasi-totalité
 des formats RAW du marché (Canon CR2/CR3/CRW, Nikon NEF/NRW, Sony ARW/SR2,
@@ -26,6 +33,10 @@ libopenraw, packagé sur SUSE et l'AUR), ainsi qu'un remplaçant en Rust pur
 nommé `miniaturo`. Les deux s'appuient sur **libopenraw**, dont la base de
 formats caméra est historiquement plus restreinte que celle de **libraw**
 — d'où le choix d'un moteur différent et d'un nom distinct pour ce projet.
+
+`gnome-raw-thumbnailer` n'est d'ailleurs plus dans les dépôts Ubuntu depuis
+la 20.04 LTS (dernière version : 18.04, vérifié avec
+`rmadison -u ubuntu gnome-raw-thumbnailer`).
 
 ## Compilation & empaquetage
 
@@ -96,7 +107,7 @@ rm -rf ~/.cache/thumbnails/*
 Ouvrez ensuite un dossier contenant des fichiers RAW dans Nautilus pour
 vérifier que les vignettes apparaissent.
 
-> Installer manuellement dans `/usr/bin` sort du usage prévu par la
+> Installer manuellement dans `/usr/bin` sort de l'usage prévu par la
 > norme FHS (réservé aux paquets gérés par le gestionnaire de paquets).
 > La solution propre à terme est d'empaqueter en `.deb` (voir
 > ci-dessus), qui installe légitimement dans `/usr/bin` via dpkg.
@@ -109,7 +120,7 @@ format RAW spécifique n'est pas reconnu (vérifier le type MIME réel avec
 
 ## Tests
 
-Validé sur un NEF Nikon réel (30 Mo) : extraction de vignette embarquée
+Validé sur un NEF Nikon réel, un CR2 Canon et un ARW Sony : extraction de vignette embarquée
 ~1 s (dominé par l'identification du fichier par libraw lui-même, pas par
 le code Rust), décodage complet en repli ~6 s. Gestion propre des fichiers
 invalides ou non-RAW (code de sortie non nul, aucun fichier de sortie
