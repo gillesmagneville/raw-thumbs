@@ -1,101 +1,102 @@
 # raw-thumbs
 
-🇬🇧 [English version](README.en.md)
+🇫🇷 [Version française](README.fr.md)
 
-**Ubuntu n'a plus de thumbnailer RAW dans ses dépôts depuis la 20.04 LTS**
-(le dernier, `gnome-raw-thumbnailer`, date de la 18.04). raw-thumbs rétablit
-les vignettes RAW dans Nautilus, y compris pour les fichiers sans aperçu
-intégré.
+**Ubuntu has shipped no RAW thumbnailer in its archive since 20.04 LTS**
+(the last one, `gnome-raw-thumbnailer`, was in 18.04). raw-thumbs brings
+RAW thumbnails back to Nautilus, including for files with no embedded
+preview.
 
-Thumbnailer RAW pour Nautilus / GNOME Files, écrit en Rust, s'appuyant sur
-**libraw** (bindings FFI via `libraw-sys`) pour couvrir la quasi-totalité
-des formats RAW du marché (Canon CR2/CR3/CRW, Nikon NEF/NRW, Sony ARW/SR2,
-Fuji RAF, Panasonic RW2, Olympus ORF, Pentax PEF, Adobe DNG, Sigma X3F,
-Kodak DCR/KDC, Hasselblad 3FR, Phase One IIQ, etc.).
+RAW thumbnailer for Nautilus / GNOME Files, written in Rust, built on
+**libraw** (FFI bindings via `libraw-sys`) to cover nearly all RAW formats
+on the market (Canon CR2/CR3/CRW, Nikon NEF/NRW, Sony ARW/SR2, Fuji RAF,
+Panasonic RW2, Olympus ORF, Pentax PEF, Adobe DNG, Sigma X3F, Kodak
+DCR/KDC, Hasselblad 3FR, Phase One IIQ, etc.).
 
-## Stratégie
+## Strategy
 
-1. **Vignette embarquée** (`libraw_unpack_thumb` + `libraw_dcraw_make_mem_thumb`) :
-   chemin rapide, couvre la grande majorité des fichiers réels.
-2. **Décodage complet** (`libraw_unpack` + `libraw_dcraw_process` +
-   `libraw_dcraw_make_mem_image`) : repli automatique pour les RAW sans
-   vignette embarquée exploitable.
+1. **Embedded thumbnail** (`libraw_unpack_thumb` +
+   `libraw_dcraw_make_mem_thumb`): the fast path, which covers the vast
+   majority of real-world files.
+2. **Full decode** (`libraw_unpack` + `libraw_dcraw_process` +
+   `libraw_dcraw_make_mem_image`): automatic fallback for RAW files with
+   no usable embedded thumbnail.
 
-Dans les deux cas, le décodage est fait par libraw (bibliothèque C liée
-dynamiquement) — Rust n'orchestre que les appels, le redimensionnement
-(crate `image`, filtre Lanczos3) et l'écriture PNG.
+In both cases the decoding is done by libraw (a C library, dynamically
+linked) — Rust only orchestrates the calls, the resizing (the `image`
+crate, Lanczos3 filter) and the PNG output.
 
-## Pourquoi pas le "raw-thumbnailer" existant ?
+## Why not the existing "raw-thumbnailer"?
 
-Il existe déjà un projet nommé `raw-thumbnailer` / `gnome-raw-thumbnailer`
-(gitlab.gnome.org/World/gnome-raw-thumbnailer, maintenu par l'auteur de
-libopenraw, packagé sur SUSE et l'AUR), ainsi qu'un remplaçant en Rust pur
-nommé `miniaturo`. Les deux s'appuient sur **libopenraw**, dont la base de
-formats caméra est historiquement plus restreinte que celle de **libraw**
-— d'où le choix d'un moteur différent et d'un nom distinct pour ce projet.
+There is already a project named `raw-thumbnailer` /
+`gnome-raw-thumbnailer` (gitlab.gnome.org/World/gnome-raw-thumbnailer,
+maintained by the author of libopenraw, packaged on SUSE and the AUR), as
+well as a pure-Rust replacement named `miniaturo`. Both rely on
+**libopenraw**, whose camera format database has historically been
+narrower than **libraw**'s — hence the choice of a different engine and of
+a distinct name for this project.
 
-`gnome-raw-thumbnailer` n'est d'ailleurs plus dans les dépôts Ubuntu depuis
-la 20.04 LTS (dernière version : 18.04, vérifié avec
+`gnome-raw-thumbnailer` is also no longer in the Ubuntu archive since 20.04
+LTS (last version: 18.04, checked with
 `rmadison -u ubuntu gnome-raw-thumbnailer`).
 
-## Compilation & empaquetage
+## Building & packaging
 
-Dépendances de build (Ubuntu 26.04) :
+Build dependencies (Ubuntu 26.04):
 
 ```bash
 sudo apt install build-essential pkg-config libraw-dev cargo rustc
 ```
 
-**Paquet `.deb`** (méthode recommandée) — `build-deb.sh` suit les mêmes
-principes que celui de [linuxdoctor](https://github.com/gillesmagneville/linuxdoctor)
-(et, plus loin, de Planche-Contact) : versionnage interactif ou par flag,
-`VERSION`/`Cargo.toml` mis à jour uniquement après un build réussi,
-staging dans un dossier temporaire avec permissions normalisées. Utilise
-[fpm](https://fpm.readthedocs.io/) — installer avec
-`gem install --user-install fpm` si absent.
+**`.deb` package** (recommended method) — `build-deb.sh` follows the same
+principles as the one in [linuxdoctor](https://github.com/gillesmagneville/linuxdoctor)
+(and, further on, Planche-Contact): interactive or flag-based versioning,
+`VERSION`/`Cargo.toml` updated only after a successful build, staging in a
+temporary directory with normalized permissions. It uses
+[fpm](https://fpm.readthedocs.io/) — install it with
+`gem install --user-install fpm` if missing.
 
 ```bash
-./build-deb.sh --patch              # ou --minor / --major / --no-version-change
-./build-deb.sh --patch --yes        # sans confirmation interactive
-./build-deb.sh --clean              # supprime le dossier de build et les .deb générés
+./build-deb.sh --patch              # or --minor / --major / --no-version-change
+./build-deb.sh --patch --yes        # without interactive confirmation
+./build-deb.sh --clean              # removes the build folder and generated .deb files
 ```
 
-Avant la première utilisation, éditez `MAINTAINER` et `URL` en tête du
-script — ce sont des valeurs à personnaliser. Le paquet généré installe
-le binaire dans `/usr/bin/raw-thumbs`, le fichier `raw-thumbs.thumbnailer`
-dans `/usr/share/thumbnailers/`, déclare une dépendance sur
-`libraw23t64` (le paquet fournissant `libraw_r.so` sur Ubuntu 26.04 —
-à vérifier si vous construisez sur une autre distribution), et affiche
-après installation un rappel pour redémarrer Nautilus :
+Before first use, edit `MAINTAINER` and `URL` at the top of the script —
+these are values to customize. The generated package installs the binary
+to `/usr/bin/raw-thumbs` and the `raw-thumbs.thumbnailer` file to
+`/usr/share/thumbnailers/`, declares a dependency on `libraw23t64` (the
+package providing `libraw_r.so` on Ubuntu 26.04 — check this if you build
+on another distribution), and prints a reminder to restart Nautilus after
+installation:
 
 ```bash
 sudo apt install ./raw-thumbs_<version>_amd64.deb
 ```
 
-**Compilation seule**, sans empaquetage :
+**Build only**, without packaging:
 
 ```bash
 cargo build --release
 ```
 
-Le binaire final se trouve dans `target/release/raw-thumbs` (~750 Ko,
-lié dynamiquement à `libraw_r`).
+The resulting binary is `target/release/raw-thumbs` (~750 KB, dynamically
+linked to `libraw_r`).
 
-## Installation manuelle (développement uniquement)
+## Manual installation (development only)
 
-Pour itérer rapidement sans repasser par `build-deb.sh` à chaque
-changement :
+To iterate quickly without going through `build-deb.sh` after every
+change:
 
-Comme pour tout thumbnailer Nautilus, le binaire **doit** résider dans un
-emplacement système. Attention : ça ne veut *pas* dire n'importe quel
-emplacement système — Nautilus exécute les thumbnailers dans un bac à
-sable bubblewrap qui ne monte que `/usr`, `/lib`, `/lib64`, `/proc`,
-`/dev` et le fichier en cours de traitement. **`/usr/local` n'est jamais
-monté** : un binaire installé là est invisible depuis l'intérieur du
-sandbox et échoue silencieusement (`execve` → ENOENT), sans erreur
-visible côté utilisateur — bug GNOME connu, documenté depuis 2018
-(Debian #902288, gnome-desktop#71). Il faut donc installer dans
-`/usr/bin`, pas `/usr/local/bin` :
+As with any Nautilus thumbnailer, the binary **must** live in a system
+location. Beware: that does *not* mean just any system location — Nautilus
+runs thumbnailers in a bubblewrap sandbox that only mounts `/usr`, `/lib`,
+`/lib64`, `/proc`, `/dev` and the file being processed. **`/usr/local` is
+never mounted**: a binary installed there is invisible from inside the
+sandbox and fails silently (`execve` → ENOENT), with no visible error on
+the user's side — a known GNOME bug, documented since 2018 (Debian
+#902288, gnome-desktop#71). So install into `/usr/bin`, not
+`/usr/local/bin`:
 
 ```bash
 sudo cp target/release/raw-thumbs /usr/bin/
@@ -104,24 +105,24 @@ killall nautilus
 rm -rf ~/.cache/thumbnails/*
 ```
 
-Ouvrez ensuite un dossier contenant des fichiers RAW dans Nautilus pour
-vérifier que les vignettes apparaissent.
+Then open a folder containing RAW files in Nautilus to check that the
+thumbnails appear.
 
-> Installer manuellement dans `/usr/bin` sort de l'usage prévu par la
-> norme FHS (réservé aux paquets gérés par le gestionnaire de paquets).
-> La solution propre à terme est d'empaqueter en `.deb` (voir
-> ci-dessus), qui installe légitimement dans `/usr/bin` via dpkg.
+> Installing manually into `/usr/bin` goes against the intended use of the
+> FHS (reserved for files managed by the package manager). The clean,
+> long-term solution is to package it as a `.deb` (see above), which
+> legitimately installs into `/usr/bin` through dpkg.
 
-## Format des types MIME couverts
+## Covered MIME types
 
-Voir `raw-thumbs.thumbnailer` — la liste peut être étendue si un
-format RAW spécifique n'est pas reconnu (vérifier le type MIME réel avec
-`file --mime-type mon_fichier.xyz` ou `xdg-mime query filetype`).
+See `raw-thumbs.thumbnailer` — the list can be extended if a specific RAW
+format is not recognized (check the real MIME type with
+`file --mime-type my_file.xyz` or `xdg-mime query filetype`).
 
 ## Tests
 
-Validé sur un NEF Nikon réel, un CR2 Canon et un ARW Sony : extraction de vignette embarquée
-~1 s (dominé par l'identification du fichier par libraw lui-même, pas par
-le code Rust), décodage complet en repli ~6 s. Gestion propre des fichiers
-invalides ou non-RAW (code de sortie non nul, aucun fichier de sortie
-créé, pas de panique).
+Validated on a real Nikon NEF, a Canon CR2 and a Sony ARW: embedded
+thumbnail extraction takes ~1 s (dominated by libraw's own identification
+of the file, not by the Rust code), and the full-decode fallback ~6 s.
+Invalid or non-RAW files are handled cleanly (non-zero exit code, no output
+file created, no panic).

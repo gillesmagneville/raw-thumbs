@@ -8,6 +8,13 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Modifié
+
+- **Le README affiché par défaut sur GitHub est maintenant en anglais** :
+  `README.md` est la version anglaise et la version française devient
+  `README.fr.md` (`README.en.md` disparaît). Les deux sont embarqués dans le
+  paquet `.deb`.
+
 ## [1.0.1] - 2026-10-28
 
 ### Corrigé
