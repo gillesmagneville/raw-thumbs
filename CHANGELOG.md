@@ -8,6 +8,8 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-28
+
 ### Corrigé
 
 - Orientation EXIF/MakerNote non appliquée sur le chemin vignette
@@ -19,6 +21,27 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
   rotation correspondante nous-mêmes uniquement sur la vignette
   embarquée. Validé sur un DNG iPhone (flip=6, mire ColorChecker) :
   logo et texte à l'endroit après correction, à l'envers avant.
+- `Cargo.lock` : trois sommes de contrôle (`crc32fast`, `miniz_oxide`,
+  `pkg-config`) étaient altérées depuis la v1.0.0, si bien que `cargo build`
+  refusait de compiler depuis les sources (« checksum … changed between lock
+  files »). Elles sont rétablies à leurs valeurs officielles, vérifiées
+  contre crates.io. Pour compiler depuis les sources, utiliser la 1.0.1 ;
+  le tag v1.0.0 reste tel quel.
+
+### Ajouté
+
+- README en anglais (`README.en.md`) et accroche : Ubuntu n'a plus de
+  thumbnailer RAW dans ses dépôts depuis la 20.04 LTS.
+- Fichier `LICENSE` (GPL-3.0-only, déjà déclarée dans les métadonnées du
+  paquet), installé aussi dans `/usr/share/doc/raw-thumbs/`.
+
+## [1.0.0] - 2026-08-18
+
+### Modifié
+
+- Première version stable : renumérotation de la 0.1.0, dont le code est
+  inchangé ; `MAINTAINER` renseigné dans `build-deb.sh` et
+  `.gitattributes` ajouté.
 
 ## [0.1.0] - 2026-08-18
 
