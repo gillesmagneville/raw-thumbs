@@ -14,6 +14,10 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
   `README.md` est la version anglaise et la version française devient
   `README.fr.md` (`README.en.md` disparaît). Les deux sont embarqués dans le
   paquet `.deb`.
+- **README : section Licence et mention de l'aide de Claude.** Les deux README
+  indiquent la licence (GPL-3.0-only) et précisent que le projet a été construit
+  avec l'aide de Claude.ai par un développeur non professionnel, comme dans
+  nautilus-convert-images.
 
 ## [1.0.1] - 2026-10-28
 

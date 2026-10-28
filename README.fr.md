@@ -125,3 +125,10 @@ Validé sur un NEF Nikon réel, un CR2 Canon et un ARW Sony : extraction de vign
 le code Rust), décodage complet en repli ~6 s. Gestion propre des fichiers
 invalides ou non-RAW (code de sortie non nul, aucun fichier de sortie
 créé, pas de panique).
+
+## Licence
+
+GPL-3.0-only. Voir [LICENSE](LICENSE).
+
+raw-thumbs est développé par Gilles MAGNEVILLE. Gilles n'est pas développeur
+professionnel — ce projet a été construit avec l'aide de Claude.ai.

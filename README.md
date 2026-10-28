@@ -126,3 +126,10 @@ thumbnail extraction takes ~1 s (dominated by libraw's own identification
 of the file, not by the Rust code), and the full-decode fallback ~6 s.
 Invalid or non-RAW files are handled cleanly (non-zero exit code, no output
 file created, no panic).
+
+## License
+
+GPL-3.0-only. See [LICENSE](LICENSE).
+
+raw-thumbs is developed by Gilles MAGNEVILLE. Gilles is not a professional
+developer — this project was built with the help of Claude.ai.
