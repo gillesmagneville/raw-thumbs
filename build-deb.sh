@@ -20,7 +20,7 @@ set -euo pipefail
 # ============================================================
 
 PACKAGE_NAME="raw-thumbs"
-MAINTAINER="Your Name <you@example.com>"  # <-- a personnaliser
+MAINTAINER="Gilles MAGNEVILLE <gilles@magneville.fr>"  # <-- a personnaliser
 DESCRIPTION="Thumbnailer RAW pour Nautilus/GNOME Files, base sur libraw"
 URL="https://github.com/gillesmagneville/raw-thumbs"  # <-- a verifier
 # Nom du paquet fournissant libraw_r.so sur le systeme de build. Confirme
