@@ -10,6 +10,18 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Modifié
 
+- **Message d'installation dans la langue du système.** Le rappel affiché à
+  l'installation du `.deb` (redémarrer Nautilus, vider le cache des vignettes)
+  s'affiche en anglais, français, espagnol ou allemand selon la langue de la
+  session (règles de gettext : `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG`),
+  avec repli sur l'anglais pour toute autre langue. Il était auparavant
+  uniquement en français (sans accents). Les textes espagnol et allemand n'ont
+  pas été relus par des locuteurs natifs.
+- **Messages de diagnostic en anglais.** Les messages écrits sur la sortie
+  d'erreur (utilisation, taille invalide, échecs de libraw, de décodage ou
+  d'écriture du PNG) étaient en français ; ils sont maintenant en anglais,
+  langue des journaux. Ils ne sont visibles que si on lance `raw-thumbs` à la
+  main : Nautilus les ignore.
 - **Le README affiché par défaut sur GitHub est maintenant en anglais** :
   `README.md` est la version anglaise et la version française devient
   `README.fr.md` (`README.en.md` disparaît). Les deux sont embarqués dans le
@@ -18,6 +30,11 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
   indiquent la licence (GPL-3.0-only) et précisent que le projet a été construit
   avec l'aide de Claude.ai par un développeur non professionnel, comme dans
   nautilus-convert-images.
+
+### Ajouté
+
+- `tests/test-postinst.sh` : vérifie le message d'installation sous plusieurs
+  interpréteurs sh et réglages de langue.
 
 ## [1.0.1] - 2026-10-28
 

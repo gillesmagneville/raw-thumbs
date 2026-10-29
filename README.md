@@ -68,7 +68,7 @@ to `/usr/bin/raw-thumbs` and the `raw-thumbs.thumbnailer` file to
 `/usr/share/thumbnailers/`, declares a dependency on `libraw23t64` (the
 package providing `libraw_r.so` on Ubuntu 26.04 — check this if you build
 on another distribution), and prints a reminder to restart Nautilus after
-installation:
+installation (in your system language):
 
 ```bash
 sudo apt install ./raw-thumbs_<version>_amd64.deb
@@ -119,7 +119,28 @@ See `raw-thumbs.thumbnailer` — the list can be extended if a specific RAW
 format is not recognized (check the real MIME type with
 `file --mime-type my_file.xyz` or `xdg-mime query filetype`).
 
+## Languages
+
+raw-thumbs has no window and no menu of its own: Nautilus simply shows the
+thumbnails. The only text meant for a person is the reminder printed when the
+`.deb` is installed. It follows your system language — **English, French,
+Spanish or German**, and English for any other language (same rules as
+`gettext`: the `LANGUAGE`, `LC_ALL`, `LC_MESSAGES` or `LANG` variables).
+
+* The Spanish and German texts have not yet been reviewed by native
+  speakers: corrections are welcome.
+* The diagnostic messages the program writes on its error output (only
+  visible when you run it by hand in a terminal) are in English.
+* The "Convert images…" context-menu entry is not part of raw-thumbs: it
+  belongs to the separate project nautilus-convert-images, which is
+  available in the same four languages.
+
 ## Tests
+
+`tests/test-postinst.sh` runs the install script under several shells and
+language settings (English, French, Spanish, German, unsupported languages,
+variable priority, `LANGUAGE` lists) and checks that it only *prints* the
+two commands to run, never executes them.
 
 Validated on a real Nikon NEF, a Canon CR2 and a Sony ARW: embedded
 thumbnail extraction takes ~1 s (dominated by libraw's own identification

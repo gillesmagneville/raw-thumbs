@@ -36,7 +36,7 @@ enum ExtractedImage {
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().collect();
     if args.len() != 4 {
-        eprintln!("Usage: {} <entree_raw> <sortie.png> <taille>", args[0]);
+        eprintln!("Usage: {} <raw_input> <output.png> <size>", args[0]);
         return ExitCode::FAILURE;
     }
 
@@ -47,7 +47,7 @@ fn main() -> ExitCode {
     let target_size: u32 = match args[3].parse() {
         Ok(s) => s,
         Err(_) => {
-            eprintln!("Taille invalide: {}", args[3]);
+            eprintln!("Invalid size: {}", args[3]);
             return ExitCode::FAILURE;
         }
     };
@@ -67,7 +67,7 @@ fn main() -> ExitCode {
 fn run(input_path: &str, output_path: &str, target_size: u32) -> Result<(), String> {
     let handle = unsafe { raw::libraw_init(0) };
     if handle.is_null() {
-        return Err("échec de libraw_init".into());
+        return Err("libraw_init failed".into());
     }
 
     // RAII minimal : on garantit la libération du handle libraw quel que
@@ -80,10 +80,10 @@ fn run(input_path: &str, output_path: &str, target_size: u32) -> Result<(), Stri
     }
     let _guard = LibRawGuard(handle);
 
-    let c_path = CString::new(input_path).map_err(|_| "chemin invalide (NUL byte)".to_string())?;
+    let c_path = CString::new(input_path).map_err(|_| "invalid path (NUL byte)".to_string())?;
     let open_result = unsafe { raw::libraw_open_file(handle, c_path.as_ptr()) };
     if open_result != raw::LIBRAW_SUCCESS as i32 {
-        return Err(format!("libraw_open_file a échoué (code {open_result})"));
+        return Err(format!("libraw_open_file failed (code {open_result})"));
     }
 
     // Orientation attendue (0 = aucune, 3 = 180°, 5 = 90° anti-horaire,
@@ -114,7 +114,7 @@ fn run(input_path: &str, output_path: &str, target_size: u32) -> Result<(), Stri
     // défaut de libraw, user_flip valant -1 tant qu'on ne le modifie pas).
     // L'appliquer une deuxième fois tournerait l'image deux fois.
     let img = full_decode(handle)?;
-    let dynimg = decode_extracted(img).map_err(|e| format!("décodage complet: {e}"))?;
+    let dynimg = decode_extracted(img).map_err(|e| format!("full decode: {e}"))?;
     save_resized(dynimg, target_size, output_path)
 }
 
@@ -155,17 +155,17 @@ fn try_extract_embedded_thumb(handle: *mut raw::libraw_data_t) -> Option<Extract
 fn full_decode(handle: *mut raw::libraw_data_t) -> Result<ExtractedImage, String> {
     let r = unsafe { raw::libraw_unpack(handle) };
     if r != raw::LIBRAW_SUCCESS as i32 {
-        return Err(format!("libraw_unpack a échoué (code {r})"));
+        return Err(format!("libraw_unpack failed (code {r})"));
     }
     let r = unsafe { raw::libraw_dcraw_process(handle) };
     if r != raw::LIBRAW_SUCCESS as i32 {
-        return Err(format!("libraw_dcraw_process a échoué (code {r})"));
+        return Err(format!("libraw_dcraw_process failed (code {r})"));
     }
 
     let mut errc: i32 = 0;
     let img_ptr = unsafe { raw::libraw_dcraw_make_mem_image(handle, &mut errc) };
     if img_ptr.is_null() || errc != 0 {
-        return Err(format!("libraw_dcraw_make_mem_image a échoué (code {errc})"));
+        return Err(format!("libraw_dcraw_make_mem_image failed (code {errc})"));
     }
 
     let result = extract_processed_image(img_ptr).ok_or_else(|| "format image inattendu".to_string());
@@ -210,11 +210,11 @@ fn decode_extracted(img: ExtractedImage) -> Result<DynamicImage, String> {
     match img {
         ExtractedImage::Jpeg(bytes) => {
             image::load_from_memory_with_format(&bytes, image::ImageFormat::Jpeg)
-                .map_err(|e| format!("décodage JPEG embarqué: {e}"))
+                .map_err(|e| format!("embedded JPEG decode: {e}"))
         }
         ExtractedImage::Bitmap { width, height, data } => {
             let buf: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_raw(width, height, data)
-                .ok_or_else(|| "dimensions bitmap incohérentes".to_string())?;
+                .ok_or_else(|| "inconsistent bitmap dimensions".to_string())?;
             Ok(DynamicImage::ImageRgb8(buf))
         }
     }
@@ -224,5 +224,5 @@ fn save_resized(img: DynamicImage, target_size: u32, output_path: &str) -> Resul
     let resized = img.resize(target_size, target_size, image::imageops::FilterType::Lanczos3);
     resized
         .save_with_format(output_path, image::ImageFormat::Png)
-        .map_err(|e| format!("écriture PNG: {e}"))
+        .map_err(|e| format!("PNG write: {e}"))
 }

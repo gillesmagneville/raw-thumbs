@@ -66,7 +66,7 @@ le binaire dans `/usr/bin/raw-thumbs`, le fichier `raw-thumbs.thumbnailer`
 dans `/usr/share/thumbnailers/`, déclare une dépendance sur
 `libraw23t64` (le paquet fournissant `libraw_r.so` sur Ubuntu 26.04 —
 à vérifier si vous construisez sur une autre distribution), et affiche
-après installation un rappel pour redémarrer Nautilus :
+après installation un rappel pour redémarrer Nautilus (dans la langue du système) :
 
 ```bash
 sudo apt install ./raw-thumbs_<version>_amd64.deb
@@ -118,7 +118,31 @@ Voir `raw-thumbs.thumbnailer` — la liste peut être étendue si un
 format RAW spécifique n'est pas reconnu (vérifier le type MIME réel avec
 `file --mime-type mon_fichier.xyz` ou `xdg-mime query filetype`).
 
+## Langues
+
+raw-thumbs n'a ni fenêtre ni menu : Nautilus affiche simplement les
+vignettes. Le seul texte destiné à une personne est le rappel affiché à
+l'installation du `.deb`. Il suit la langue de votre système — **anglais,
+français, espagnol ou allemand**, et anglais pour toute autre langue (mêmes
+règles que `gettext` : variables `LANGUAGE`, `LC_ALL`, `LC_MESSAGES` ou
+`LANG`).
+
+* Les textes espagnol et allemand n'ont pas encore été relus par des
+  locuteurs natifs : les corrections sont les bienvenues.
+* Les messages de diagnostic que le programme écrit sur sa sortie d'erreur
+  (visibles seulement si vous le lancez à la main dans un terminal) sont en
+  anglais.
+* L'entrée de menu contextuel « Convertir les images… » ne fait pas partie de
+  raw-thumbs : elle appartient au projet distinct nautilus-convert-images,
+  disponible dans les mêmes quatre langues.
+
 ## Tests
+
+`tests/test-postinst.sh` exécute le script d'installation sous plusieurs
+interpréteurs et réglages de langue (anglais, français, espagnol, allemand,
+langues non gérées, priorité des variables, listes `LANGUAGE`) et vérifie
+qu'il se contente d'*afficher* les deux commandes à lancer, sans jamais les
+exécuter.
 
 Validé sur un NEF Nikon réel, un CR2 Canon et un ARW Sony : extraction de vignette embarquée
 ~1 s (dominé par l'identification du fichier par libraw lui-même, pas par
