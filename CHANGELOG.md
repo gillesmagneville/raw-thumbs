@@ -8,6 +8,11 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-29
+
+Aucun changement dans la génération des vignettes : cette version concerne les
+messages affichés et la documentation.
+
 ### Modifié
 
 - **Message d'installation dans la langue du système.** Le rappel affiché à

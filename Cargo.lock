@@ -155,7 +155,7 @@ dependencies = [
 
 [[package]]
 name = "raw-thumbs"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "image",
  "libraw-sys",
