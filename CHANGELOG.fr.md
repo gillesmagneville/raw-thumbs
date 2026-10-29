@@ -10,6 +10,8 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-10-29
+
 ### Ajouté
 
 - **`release.sh`** : publie une release GitHub en une commande, sur le modèle
