@@ -1,123 +1,120 @@
 # Changelog
 
-Toutes les modifications notables de ce projet sont documentées dans ce
-fichier.
+🇫🇷 [Version française](CHANGELOG.fr.md)
 
-Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
-et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
+All notable changes to this project are documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Ajouté
+### Added
 
-- **`release.sh`** : publie une release GitHub en une commande, sur le modèle
-  de nautilus-convert-images (`--dry-run` pour tout voir sans rien modifier).
-  Il vérifie le dépôt et les sources, lance `tests/test-postinst.sh`, tire les
-  notes du CHANGELOG (« [Unreleased] » devient « [X.Y.Z] - date », avec un
-  résumé anglais facultatif), reconstruit et inspecte le `.deb`, puis valide,
-  pousse et crée la release avec le `.deb` et son `.sha256`. Voir le README.
-
-### English summary
-
-- New `release.sh` script: publishes a GitHub release in one command (checks,
-  package inspection, release notes taken from the CHANGELOG, commit, push,
-  release with the `.deb` and its `.sha256`). Use `--dry-run` to see
-  everything without changing anything.
+- **`release.sh`**: publishes a GitHub release in one command, on the model of
+  nautilus-convert-images (`--dry-run` to see everything without changing
+  anything). It checks the repository and the sources, runs
+  `tests/test-postinst.sh`, takes the release notes from the CHANGELOG
+  ("[Unreleased]" becomes "[X.Y.Z] - date"), rebuilds and inspects the `.deb`,
+  then commits, pushes and creates the release with the `.deb` and its
+  `.sha256`. See the README.
+- Release notes **in English first, then in French** (like the README,
+  English by default). They come from the entry of the version in
+  `CHANGELOG.md` (English) and in `CHANGELOG.fr.md` (French): `release.sh`
+  stops before changing anything if either is missing or empty.
+- **Bilingual CHANGELOG**: `CHANGELOG.md` (English, shown by default on
+  GitHub) and `CHANGELOG.fr.md` (French), with a link to switch language at
+  the top of each file. Both are shipped in the `.deb` package.
 
 ## [1.0.2] - 2026-10-29
 
-Aucun changement dans la génération des vignettes : cette version concerne les
-messages affichés et la documentation.
+No change to how thumbnails are generated: this release is about the
+messages shown and the documentation.
 
-### Modifié
+### Changed
 
-- **Message d'installation dans la langue du système.** Le rappel affiché à
-  l'installation du `.deb` (redémarrer Nautilus, vider le cache des vignettes)
-  s'affiche en anglais, français, espagnol ou allemand selon la langue de la
-  session (règles de gettext : `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG`),
-  avec repli sur l'anglais pour toute autre langue. Il était auparavant
-  uniquement en français (sans accents). Les textes espagnol et allemand n'ont
-  pas été relus par des locuteurs natifs.
-- **Messages de diagnostic en anglais.** Les messages écrits sur la sortie
-  d'erreur (utilisation, taille invalide, échecs de libraw, de décodage ou
-  d'écriture du PNG) étaient en français ; ils sont maintenant en anglais,
-  langue des journaux. Ils ne sont visibles que si on lance `raw-thumbs` à la
-  main : Nautilus les ignore.
-- **Le README affiché par défaut sur GitHub est maintenant en anglais** :
-  `README.md` est la version anglaise et la version française devient
-  `README.fr.md` (`README.en.md` disparaît). Les deux sont embarqués dans le
-  paquet `.deb`.
-- **README : section Licence et mention de l'aide de Claude.** Les deux README
-  indiquent la licence (GPL-3.0-only) et précisent que le projet a été construit
-  avec l'aide de Claude.ai par un développeur non professionnel, comme dans
+- **Install message in the system language.** The reminder printed when the
+  `.deb` is installed (restart Nautilus, clear the thumbnail cache) is shown
+  in English, French, Spanish or German depending on the session language
+  (gettext rules: `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG`), falling back
+  to English for any other language. It used to be French only (without
+  accents). The Spanish and German texts have not been reviewed by native
+  speakers.
+- **Diagnostic messages in English.** The messages written to standard error
+  (usage, invalid size, libraw, decoding or PNG-writing failures) were in
+  French; they are now in English, the language of logs. They are only
+  visible when running `raw-thumbs` by hand: Nautilus ignores them.
+- **The README shown by default on GitHub is now in English**: `README.md` is
+  the English version and the French version becomes `README.fr.md`
+  (`README.en.md` disappears). Both are shipped in the `.deb` package.
+- **README: License section and mention of Claude's help.** Both READMEs state
+  the license (GPL-3.0-only) and specify that the project was built with the
+  help of Claude.ai by a non-professional developer, as in
   nautilus-convert-images.
 
-### Ajouté
+### Added
 
-- `tests/test-postinst.sh` : vérifie le message d'installation sous plusieurs
-  interpréteurs sh et réglages de langue.
+- `tests/test-postinst.sh`: checks the install message under several `sh`
+  interpreters and language settings.
 
 ## [1.0.1] - 2026-10-28
 
-### Corrigé
+### Fixed
 
-- Orientation EXIF/MakerNote non appliquée sur le chemin vignette
-  embarquée (`libraw_unpack_thumb`/`libraw_dcraw_make_mem_thumb`) : les
-  photos prises en portrait ou avec l'appareil tourné apparaissaient
-  pivotées à 90°/180°. Le chemin décodage complet (`dcraw_make_mem_image`)
-  n'était pas affecté — libraw y applique déjà la rotation en interne.
-  Corrigé en lisant `libraw_image_sizes_t.flip` et en appliquant la
-  rotation correspondante nous-mêmes uniquement sur la vignette
-  embarquée. Validé sur un DNG iPhone (flip=6, mire ColorChecker) :
-  logo et texte à l'endroit après correction, à l'envers avant.
-- `Cargo.lock` : trois sommes de contrôle (`crc32fast`, `miniz_oxide`,
-  `pkg-config`) étaient altérées depuis la v1.0.0, si bien que `cargo build`
-  refusait de compiler depuis les sources (« checksum … changed between lock
-  files »). Elles sont rétablies à leurs valeurs officielles, vérifiées
-  contre crates.io. Pour compiler depuis les sources, utiliser la 1.0.1 ;
-  le tag v1.0.0 reste tel quel.
+- EXIF/MakerNote orientation not applied on the embedded-thumbnail path
+  (`libraw_unpack_thumb`/`libraw_dcraw_make_mem_thumb`): photos taken in
+  portrait or with the camera rotated appeared rotated by 90°/180°. The full
+  decoding path (`dcraw_make_mem_image`) was not affected — libraw already
+  applies the rotation internally there. Fixed by reading
+  `libraw_image_sizes_t.flip` and applying the matching rotation ourselves,
+  only on the embedded thumbnail. Validated on an iPhone DNG (flip=6,
+  ColorChecker chart): logo and text upright after the fix, upside down
+  before.
+- `Cargo.lock`: three checksums (`crc32fast`, `miniz_oxide`, `pkg-config`)
+  had been altered since v1.0.0, so that `cargo build` refused to build from
+  source ("checksum … changed between lock files"). They are restored to
+  their official values, verified against crates.io. To build from source,
+  use 1.0.1; the v1.0.0 tag is left as it is.
 
-### Ajouté
+### Added
 
-- README en anglais (`README.en.md`) et accroche : Ubuntu n'a plus de
-  thumbnailer RAW dans ses dépôts depuis la 20.04 LTS.
-- Fichier `LICENSE` (GPL-3.0-only, déjà déclarée dans les métadonnées du
-  paquet), installé aussi dans `/usr/share/doc/raw-thumbs/`.
+- English README (`README.en.md`) and tagline: Ubuntu has had no RAW
+  thumbnailer in its repositories since 20.04 LTS.
+- `LICENSE` file (GPL-3.0-only, already declared in the package metadata),
+  also installed in `/usr/share/doc/raw-thumbs/`.
 
 ## [1.0.0] - 2026-08-18
 
-### Modifié
+### Changed
 
-- Première version stable : renumérotation de la 0.1.0, dont le code est
-  inchangé ; `MAINTAINER` renseigné dans `build-deb.sh` et
-  `.gitattributes` ajouté.
+- First stable version: renumbering of 0.1.0, whose code is unchanged;
+  `MAINTAINER` filled in `build-deb.sh` and `.gitattributes` added.
 
 ## [0.1.0] - 2026-08-18
 
-### Ajouté
+### Added
 
-- Thumbnailer RAW pour Nautilus / GNOME Files écrit en Rust, appuyé sur
-  **libraw** via des bindings FFI (`libraw-sys`).
-- Extraction de vignette embarquée (`libraw_unpack_thumb` +
-  `libraw_dcraw_make_mem_thumb`) : chemin rapide couvrant la grande
-  majorité des fichiers RAW réels.
-- Décodage RAW complet en repli (`libraw_unpack` + `libraw_dcraw_process`
-  + `libraw_dcraw_make_mem_image`) pour les fichiers sans vignette
-  embarquée exploitable.
-- Couverture de la quasi-totalité des formats RAW du marché via libraw :
-  Canon CR2/CR3/CRW, Nikon NEF/NRW, Sony ARW/SR2/SRF, Fuji RAF,
-  Panasonic RAW/RW2, Olympus ORF, Pentax PEF/RAW, Adobe DNG, Sigma X3F,
-  Kodak DCR/K25/KDC, Minolta MRW, Hasselblad 3FR, Phase One IIQ, Epson
-  ERF, Mamiya MEF, Leaf MOS.
-- Fichier d'enregistrement `raw-thumbs.thumbnailer` conforme à la
-  spécification freedesktop.org thumbnailer, compatible avec le bac à
-  sable bubblewrap de Nautilus/GNOME Files (installation en `/usr/bin`,
-  seul emplacement monté dans le sandbox — `/usr/local` ne l'est pas).
-- Empaquetage `.deb` via `build-deb.sh` (fpm).
+- RAW thumbnailer for Nautilus / GNOME Files written in Rust, based on
+  **libraw** through FFI bindings (`libraw-sys`).
+- Embedded-thumbnail extraction (`libraw_unpack_thumb` +
+  `libraw_dcraw_make_mem_thumb`): fast path covering the vast majority of
+  real RAW files.
+- Full RAW decoding as a fallback (`libraw_unpack` + `libraw_dcraw_process` +
+  `libraw_dcraw_make_mem_image`) for files with no usable embedded thumbnail.
+- Coverage of almost all RAW formats on the market through libraw: Canon
+  CR2/CR3/CRW, Nikon NEF/NRW, Sony ARW/SR2/SRF, Fuji RAF, Panasonic RAW/RW2,
+  Olympus ORF, Pentax PEF/RAW, Adobe DNG, Sigma X3F, Kodak DCR/K25/KDC,
+  Minolta MRW, Hasselblad 3FR, Phase One IIQ, Epson ERF, Mamiya MEF, Leaf
+  MOS.
+- `raw-thumbs.thumbnailer` registration file compliant with the
+  freedesktop.org thumbnailer specification, compatible with the bubblewrap
+  sandbox of Nautilus/GNOME Files (installation in `/usr/bin`, the only
+  location mounted in the sandbox — `/usr/local` is not).
+- `.deb` packaging through `build-deb.sh` (fpm).
 
-### Corrigé
+### Fixed
 
-- Validé sur fichiers RAW réels (Sony ARW, Canon CR2) : aucune vignette
-  concurrente enregistrée dans `~/.local/share/thumbnailers/` ou
-  `/usr/local/share/thumbnailers/` ne doit rester active pour le même
-  type MIME, sous peine d'échec silencieux masquant `raw-thumbs`.
+- Validated on real RAW files (Sony ARW, Canon CR2): no competing thumbnailer
+  registered in `~/.local/share/thumbnailers/` or
+  `/usr/local/share/thumbnailers/` must remain active for the same MIME type,
+  otherwise a silent failure hides `raw-thumbs`.

@@ -213,7 +213,7 @@ mkdir -p "$BUILD_DIR/usr/share/doc/$PACKAGE_NAME"
 cp "$BINARY" "$BUILD_DIR/usr/bin/raw-thumbs"
 cp "$PROJECT_DIR/raw-thumbs.thumbnailer" "$BUILD_DIR/usr/share/thumbnailers/"
 
-for doc in README.md README.fr.md CHANGELOG.md LICENSE; do
+for doc in README.md README.fr.md CHANGELOG.md CHANGELOG.fr.md LICENSE; do
     [ -f "$PROJECT_DIR/$doc" ] && cp "$PROJECT_DIR/$doc" "$BUILD_DIR/usr/share/doc/$PACKAGE_NAME/"
 done
 

@@ -18,10 +18,11 @@ set -euo pipefail
 #   ./release.sh --dry-run           # tout voir, rien modifier
 #   ./release.sh
 #
-# Les notes de la release viennent du CHANGELOG : si la section de la
-# version n'existe pas encore, le contenu de « ## [Unreleased] » devient
-# « ## [X.Y.Z] - date ». Une sous-section « ### English summary » (facultative)
-# est reprise dans la partie « English summary » des notes.
+# Les notes de la release viennent du CHANGELOG, en deux langues : si la
+# section de la version n'existe pas encore, le contenu de « ## [Unreleased] »
+# devient « ## [X.Y.Z] - date », dans CHANGELOG.md (anglais) ET dans
+# CHANGELOG.fr.md (francais). Les notes sont publiees en anglais d'abord (le
+# README affiche l'anglais par defaut), puis en francais.
 # ============================================================
 
 REPO_SLUG="gillesmagneville/raw-thumbs"
@@ -121,7 +122,7 @@ else
 fi
 
 for f in src/main.rs raw-thumbs.thumbnailer postinst.sh build-deb.sh Cargo.toml Cargo.lock \
-         CHANGELOG.md README.md README.fr.md LICENSE; do
+         CHANGELOG.md CHANGELOG.fr.md README.md README.fr.md LICENSE; do
   [ -f "$f" ] || die "fichier du projet introuvable : $f"
 done
 
@@ -160,7 +161,7 @@ step "Mise en coherence des fichiers"
 TODAY="$(date +%F)"
 export WORK VERSION TODAY
 
-# Prepare dans $WORK la version finale de Cargo.toml et de CHANGELOG.md, ainsi
+# Prepare dans $WORK la version finale de Cargo.toml et des deux CHANGELOG, ainsi
 # que les notes (parties francaise et anglaise). N'ecrit rien dans le depot ;
 # affiche la liste des modifications prevues.
 plan_files() {
@@ -187,39 +188,34 @@ if cargo_new != cargo:
     changes.append(f"Cargo.toml : version = {version}")
     write(os.path.join(work, "Cargo.toml.new"), cargo_new)
 
-# CHANGELOG.md : section de la version (existante, ou tiree de [Unreleased]).
-text = read("CHANGELOG.md")
-sec = re.search(r'^## \[' + re.escape(version) + r'\][^\n]*\n(.*?)(?=^## \[|\Z)', text, flags=re.M | re.S)
-if sec:
-    body = sec.group(1)
-    new_text = text
-else:
-    unr = re.search(r'^## \[Unreleased\][^\n]*\n(.*?)(?=^## \[|\Z)', text, flags=re.M | re.S)
-    if not unr or not unr.group(1).strip():
-        sys.stderr.write(
-            "\nErreur : CHANGELOG.md ne contient rien a publier. Decrivez les changements sous\n"
-            f"« ## [Unreleased] » (ou creez a la main une section « ## [{version}] - date »).\n")
+# CHANGELOG.md (anglais) et CHANGELOG.fr.md (francais) : section de la version
+# (existante, ou tiree de [Unreleased]). Les notes sont publiees en anglais
+# d'abord, puis en francais : les deux fichiers doivent donc avoir du contenu.
+for path, notes_name in (("CHANGELOG.md", "notes_en.md"), ("CHANGELOG.fr.md", "notes_fr.md")):
+    text = read(path)
+    sec = re.search(r'^## \[' + re.escape(version) + r'\][^\n]*\n(.*?)(?=^## \[|\Z)', text, flags=re.M | re.S)
+    if sec:
+        body = sec.group(1)
+        new_text = text
+    else:
+        unr = re.search(r'^## \[Unreleased\][^\n]*\n(.*?)(?=^## \[|\Z)', text, flags=re.M | re.S)
+        if not unr or not unr.group(1).strip():
+            sys.stderr.write(
+                f"\nErreur : {path} ne contient rien a publier. Decrivez les changements sous\n"
+                f"« ## [Unreleased] » (ou creez a la main une section « ## [{version}] - date »).\n"
+                "Les notes de release sont publiees en anglais (CHANGELOG.md) puis en francais\n"
+                "(CHANGELOG.fr.md) : les deux fichiers doivent etre a jour.\n")
+            sys.exit(1)
+        body = unr.group(1)
+        new_text = (text[:unr.start()]
+                    + f"## [Unreleased]\n\n## [{version}] - {today}\n\n{body.strip()}\n\n"
+                    + text[unr.end():])
+        changes.append(f"{path} : « [Unreleased] » devient « [{version}] - {today} »")
+    if not body.strip():
+        sys.stderr.write(f"\nErreur : la section [{version}] de {path} est vide.\n")
         sys.exit(1)
-    body = unr.group(1)
-    new_text = (text[:unr.start()]
-                + f"## [Unreleased]\n\n## [{version}] - {today}\n\n{body.strip()}\n\n"
-                + text[unr.end():])
-    changes.append(f"CHANGELOG.md : « [Unreleased] » devient « [{version}] - {today} »")
-if not body.strip():
-    sys.stderr.write(f"\nErreur : la section [{version}] de CHANGELOG.md est vide.\n")
-    sys.exit(1)
-write(os.path.join(work, "CHANGELOG.new"), new_text)
-
-# Notes : partie francaise + « ### English summary » facultatif.
-en = re.search(r'^### English summary[ \t]*\n(.*?)(?=^### |\Z)', body, flags=re.M | re.S)
-if en:
-    fr_text = (body[:en.start()] + body[en.end():]).strip()
-    en_text = en.group(1).strip()
-else:
-    fr_text = body.strip()
-    en_text = ""
-write(os.path.join(work, "notes_fr.md"), fr_text + "\n")
-write(os.path.join(work, "notes_en.md"), (en_text + "\n") if en_text else "")
+    write(os.path.join(work, path + ".new"), new_text)
+    write(os.path.join(work, notes_name), body.strip() + "\n")
 
 for c in changes:
     print(c)
@@ -231,9 +227,6 @@ if [ -n "$PLANNED" ]; then
   printf '%s\n' "$PLANNED" | sed 's/^/    a modifier : /'
 else
   info "Aucune modification de fichier necessaire."
-fi
-if [ ! -s "$WORK/notes_en.md" ]; then
-  info "CHANGELOG : pas de sous-section « ### English summary » pour $VERSION : les notes seront publiees sans resume anglais."
 fi
 
 # ------------------------------------------------------------
@@ -274,7 +267,7 @@ inspect_package() {
   else
     PROBLEMS+=("$DEB : script d'installation (postinst) absent")
   fi
-  for f in README.md README.fr.md CHANGELOG.md LICENSE; do
+  for f in README.md README.fr.md CHANGELOG.md CHANGELOG.fr.md LICENSE; do
     cmp -s "$d/usr/share/doc/$PKG/$f" "$f" 2>/dev/null \
       || PROBLEMS+=("$DEB : $f absent ou different de celui du depot")
   done
@@ -285,7 +278,7 @@ inspect_package() {
 stale_sources() {
   [ -f "$DEB" ] || return 0
   find src Cargo.toml Cargo.lock build-deb.sh postinst.sh raw-thumbs.thumbnailer \
-       README.md README.fr.md CHANGELOG.md LICENSE \
+       README.md README.fr.md CHANGELOG.md CHANGELOG.fr.md LICENSE \
        -type f -newer "$DEB" -print -quit 2>/dev/null
 }
 
@@ -311,7 +304,38 @@ $NEED_REBUILD || info "Paquet existant a jour et conforme : il sera publie tel q
 # ------------------------------------------------------------
 NOTES="$WORK/notes.md"
 {
+  # Partie anglaise d'abord (le README affiche l'anglais par defaut), puis francaise.
   printf '# %s %s\n\n' "$PKG" "$VERSION"
+  if [ -n "$PREV_TAG" ]; then
+    printf "## What's new since %s\n\n" "${PREV_TAG#v}"
+  else
+    printf '## First release\n\n'
+  fi
+  cat "$WORK/notes_en.md"
+  cat <<EOF
+
+## Installation (Ubuntu 26.04)
+
+\`\`\`bash
+sudo apt install ./${DEB}
+nautilus -q
+\`\`\`
+
+The package depends on \`${LIBRAW_DEP}\` (the package name on Ubuntu 26.04). On other distributions, build from source (see the README).
+
+Verify the download:
+
+\`\`\`bash
+sha256sum -c ${DEB_SUM}
+\`\`\`
+
+Full details in the [CHANGELOG](https://github.com/${REPO_SLUG}/blob/main/CHANGELOG.md).
+
+---
+
+# Version française
+
+EOF
   if [ -n "$PREV_TAG" ]; then
     printf '## Nouveautés depuis la %s\n\n' "${PREV_TAG#v}"
   else
@@ -334,25 +358,8 @@ Vérification du téléchargement :
 \`\`\`bash
 sha256sum -c ${DEB_SUM}
 \`\`\`
-EOF
-  if [ -s "$WORK/notes_en.md" ]; then
-    printf '\n## English summary\n\n'
-    cat "$WORK/notes_en.md"
-    cat <<EOF
 
-Install on Ubuntu 26.04:
-
-\`\`\`bash
-sudo apt install ./${DEB}
-nautilus -q
-\`\`\`
-
-Verify the download: \`sha256sum -c ${DEB_SUM}\`
-EOF
-  fi
-  cat <<EOF
-
-Voir le [CHANGELOG](https://github.com/${REPO_SLUG}/blob/main/CHANGELOG.md) pour le détail / Full details in the [CHANGELOG](https://github.com/${REPO_SLUG}/blob/main/CHANGELOG.md).
+Voir le [CHANGELOG](https://github.com/${REPO_SLUG}/blob/main/CHANGELOG.fr.md) pour le détail.
 EOF
 } > "$NOTES"
 
@@ -399,7 +406,9 @@ fi
 step "Application des modifications"
 if [ -n "$PLANNED" ]; then
   [ -f "$WORK/Cargo.toml.new" ] && cp "$WORK/Cargo.toml.new" Cargo.toml
-  cmp -s "$WORK/CHANGELOG.new" CHANGELOG.md || cp "$WORK/CHANGELOG.new" CHANGELOG.md
+  for cl in CHANGELOG.md CHANGELOG.fr.md; do
+    cmp -s "$WORK/$cl.new" "$cl" || cp "$WORK/$cl.new" "$cl"
+  done
   printf '%s\n' "$PLANNED" | sed 's/^/    modifie : /'
 fi
 
@@ -423,7 +432,7 @@ sha256sum "$DEB" > "$WORK/$DEB_SUM"
 step "Commit et push sur main"
 if [ -n "$(git status --porcelain)" ]; then
   git add -A
-  git commit -q -m "Release $TAG" -m "Voir CHANGELOG.md."
+  git commit -q -m "Release $TAG" -m "Voir CHANGELOG.md et CHANGELOG.fr.md."
   info "Commit cree : $(git rev-parse --short HEAD)"
 else
   info "Rien a valider."

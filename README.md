@@ -97,11 +97,12 @@ way as in nautilus-convert-images. `VERSION` only moves forward through
 
 It checks the branch, the remote, that the tag is free and that the
 `.thumbnailer` file points to `/usr/bin`; runs `tests/test-postinst.sh`;
-turns `## [Unreleased]` of `CHANGELOG.md` into `## [X.Y.Z] - date` and builds
-the release notes from it (an optional `### English summary` sub-section
-becomes the "English summary" part); rebuilds the `.deb` if something it
-contains has changed and inspects it (version, dependency, files identical to
-the repository, install script); then commits, pushes and creates the release
+turns `## [Unreleased]` of `CHANGELOG.md` (English) and of `CHANGELOG.fr.md`
+(French) into `## [X.Y.Z] - date` and builds the release notes from them
+(English first, like this README, then French; both files are required);
+rebuilds the `.deb` if something it contains has changed
+and inspects it (version, dependency, files identical to the repository,
+install script); then commits, pushes and creates the release
 with the `.deb` and its `.sha256`. It needs `git`, `gh` (logged in with
 `gh auth login`), `dpkg-deb` and `python3`, plus `cargo` and `fpm` for the
 rebuild.

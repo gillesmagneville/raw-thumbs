@@ -95,13 +95,14 @@ habituel est donc :
 
 Il vérifie la branche, le dépôt distant, que le tag est libre et que le
 fichier `.thumbnailer` pointe vers `/usr/bin` ; lance
-`tests/test-postinst.sh` ; transforme `## [Unreleased]` de `CHANGELOG.md` en
-`## [X.Y.Z] - date` et en tire les notes de la release (une sous-section
-facultative `### English summary` devient la partie « English summary ») ;
-reconstruit le `.deb` si quelque chose qu'il contient a changé et l'inspecte
-(version, dépendance, fichiers identiques à ceux du dépôt, script
-d'installation) ; puis valide, pousse et crée la release avec le `.deb` et son
-`.sha256`. Il faut `git`, `gh` (connecté avec `gh auth login`), `dpkg-deb` et
+`tests/test-postinst.sh` ; transforme `## [Unreleased]` de `CHANGELOG.md`
+(anglais) et de `CHANGELOG.fr.md` (français) en `## [X.Y.Z] - date` et en tire
+les notes de la release (anglais d'abord, comme le README, puis français ; les
+deux fichiers sont obligatoires) ; reconstruit
+le `.deb` si quelque chose qu'il contient a changé et l'inspecte (version,
+dépendance, fichiers identiques à ceux du dépôt, script d'installation) ;
+puis valide, pousse et crée la release avec le `.deb` et son `.sha256`.
+Il faut `git`, `gh` (connecté avec `gh auth login`), `dpkg-deb` et
 `python3`, plus `cargo` et `fpm` pour la reconstruction.
 
 ## Installation manuelle (développement uniquement)
