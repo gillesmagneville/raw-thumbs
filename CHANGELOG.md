@@ -8,6 +8,22 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Ajouté
+
+- **`release.sh`** : publie une release GitHub en une commande, sur le modèle
+  de nautilus-convert-images (`--dry-run` pour tout voir sans rien modifier).
+  Il vérifie le dépôt et les sources, lance `tests/test-postinst.sh`, tire les
+  notes du CHANGELOG (« [Unreleased] » devient « [X.Y.Z] - date », avec un
+  résumé anglais facultatif), reconstruit et inspecte le `.deb`, puis valide,
+  pousse et crée la release avec le `.deb` et son `.sha256`. Voir le README.
+
+### English summary
+
+- New `release.sh` script: publishes a GitHub release in one command (checks,
+  package inspection, release notes taken from the CHANGELOG, commit, push,
+  release with the `.deb` and its `.sha256`). Use `--dry-run` to see
+  everything without changing anything.
+
 ## [1.0.2] - 2026-10-29
 
 Aucun changement dans la génération des vignettes : cette version concerne les

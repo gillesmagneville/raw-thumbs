@@ -81,6 +81,29 @@ cargo build --release
 Le binaire final se trouve dans `target/release/raw-thumbs` (~750 Ko,
 lié dynamiquement à `libraw_r`).
 
+### Publier une release
+
+`release.sh` publie la release GitHub correspondant à `VERSION`, comme dans
+nautilus-convert-images. `VERSION` n'avance que par `build-deb.sh` ; l'ordre
+habituel est donc :
+
+```bash
+./build-deb.sh --patch --yes     # fait avancer VERSION (ou --minor / --major)
+./release.sh --dry-run           # affiche tout, ne modifie rien
+./release.sh                     # publie, après confirmation
+```
+
+Il vérifie la branche, le dépôt distant, que le tag est libre et que le
+fichier `.thumbnailer` pointe vers `/usr/bin` ; lance
+`tests/test-postinst.sh` ; transforme `## [Unreleased]` de `CHANGELOG.md` en
+`## [X.Y.Z] - date` et en tire les notes de la release (une sous-section
+facultative `### English summary` devient la partie « English summary ») ;
+reconstruit le `.deb` si quelque chose qu'il contient a changé et l'inspecte
+(version, dépendance, fichiers identiques à ceux du dépôt, script
+d'installation) ; puis valide, pousse et crée la release avec le `.deb` et son
+`.sha256`. Il faut `git`, `gh` (connecté avec `gh auth login`), `dpkg-deb` et
+`python3`, plus `cargo` et `fpm` pour la reconstruction.
+
 ## Installation manuelle (développement uniquement)
 
 Pour itérer rapidement sans repasser par `build-deb.sh` à chaque
