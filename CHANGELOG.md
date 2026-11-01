@@ -9,6 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-11-01
+
+Maintenance release: no functional change (the program, the `.thumbnailer`
+file and the install message are identical to the previous version). What
+changes is what surrounds the program: a code of conduct, and the packaging
+and release scripts.
+
+### Added
+
+- **A code of conduct**: `CODE_OF_CONDUCT.md` (English, shown by default on
+  GitHub) and `CODE_OF_CONDUCT.fr.md` (French). It is the Contributor
+  Covenant 3.0, adapted for this project: a possible violation is reported
+  to the maintainer, Gilles MAGNEVILLE, at gilles@magneville.fr, who acts as
+  the Community Moderator. The `README` points to it.
+- **The `.deb` package ships it**, in both languages, in
+  `/usr/share/doc/raw-thumbs/`; `release.sh` checks that it is there before
+  publishing.
+
+### Changed
+
+- **License declared by the package**: the Contributor Covenant is
+  distributed by its authors under CC BY-SA 4.0, not under the GPL, so the
+  code of conduct keeps that license (`SPDX-License-Identifier:
+  CC-BY-SA-4.0` on its first line) and the package now declares
+  `GPL-3.0-only AND CC-BY-SA-4.0`. The program stays GPL-3.0-only.
+- **Packaging and release scripts in English**: the help, the messages and
+  the comments of `build-deb.sh`, `release.sh`, `postinst.sh` (the message
+  shown at install time still follows the system language) and
+  `tests/test-postinst.sh` are now in English, and so is the description of
+  the package. The confirmation prompts are now `[y/N]` and accept only `y`
+  or `Y` (they used to accept `o` as well). The release notes are still
+  published in English first, then in French.
+- **README**: `MAINTAINER` and `URL` in `build-deb.sh` are described as
+  already filled in for this repository (they used to be presented as values
+  to customize before first use).
+
 ## [1.0.3] - 2026-10-29
 
 ### Added

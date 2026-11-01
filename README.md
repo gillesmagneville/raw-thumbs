@@ -62,13 +62,14 @@ temporary directory with normalized permissions. It uses
 ./build-deb.sh --clean              # removes the build folder and generated .deb files
 ```
 
-Before first use, edit `MAINTAINER` and `URL` at the top of the script —
-these are values to customize. The generated package installs the binary
-to `/usr/bin/raw-thumbs` and the `raw-thumbs.thumbnailer` file to
-`/usr/share/thumbnailers/`, declares a dependency on `libraw23t64` (the
-package providing `libraw_r.so` on Ubuntu 26.04 — check this if you build
-on another distribution), and prints a reminder to restart Nautilus after
-installation (in your system language):
+`MAINTAINER` and `URL`, at the top of the script, are already filled in for
+this repository; adapt them in a fork. The generated package installs the
+binary to `/usr/bin/raw-thumbs`, the `raw-thumbs.thumbnailer` file to
+`/usr/share/thumbnailers/` and the documentation (README, CHANGELOG, code of
+conduct and license) to `/usr/share/doc/raw-thumbs/`, declares a dependency
+on `libraw23t64` (the package providing `libraw_r.so` on Ubuntu 26.04 —
+check this if you build on another distribution), and prints a reminder to
+restart Nautilus after installation (in your system language):
 
 ```bash
 sudo apt install ./raw-thumbs_<version>_amd64.deb
@@ -175,6 +176,10 @@ file created, no panic).
 ## License
 
 GPL-3.0-only. See [LICENSE](LICENSE).
+
+The code of conduct ([CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)) is the
+Contributor Covenant 3.0, adapted for this project; it is distributed under
+its own license, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 
 raw-thumbs is developed by Gilles MAGNEVILLE. Gilles is not a professional
 developer — this project was built with the help of Claude.ai.

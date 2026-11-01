@@ -1,14 +1,14 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-3.0-only
 #
-# Teste postinst.sh : le message affiche a l'installation doit suivre la langue
-# du systeme (anglais, francais, espagnol, allemand ; repli sur l'anglais).
-# Depuis la racine du depot :
+# Tests postinst.sh: the message shown at install time must follow the
+# system language (English, French, Spanish, German; falling back to
+# English). From the root of the repository:
 #
 #   tests/test-postinst.sh
 #
-# Le script est execute sous plusieurs interpreteurs sh et avec de faux
-# « killall » et « rm » qui prouvent qu'il ne fait qu'AFFICHER les commandes.
+# The script is run under several sh interpreters and with fake "killall"
+# and "rm" commands that prove it only PRINTS the commands.
 
 set -u
 
@@ -19,10 +19,10 @@ trap 'rm -rf "$TMP"' EXIT
 
 PASS=0
 FAIL=0
-fail() { echo "  [ECHEC] $*"; FAIL=$((FAIL + 1)); }
+fail() { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); }
 pass() { PASS=$((PASS + 1)); }
 
-# Faux killall/rm : s'ils sont appeles, ils laissent une trace.
+# Fake killall/rm: if they are called, they leave a trace.
 mkdir "$TMP/bin" "$TMP/home"
 for tool in killall rm; do
     printf '#!/bin/sh\necho "%s $*" >> "%s/called"\n' "$tool" "$TMP" > "$TMP/bin/$tool"
@@ -35,7 +35,7 @@ for tool in sh dash bash echo cat env; do
     [ -n "$found" ] && ln -s "$found" "$SYSBIN/$tool"
 done
 
-# Un fragment de la premiere phrase, propre a chaque langue.
+# A fragment of the first sentence, specific to each language.
 marker() {
     case "$1" in
         en) echo "raw-thumbs installed." ;;
@@ -45,7 +45,7 @@ marker() {
     esac
 }
 
-# detect_lang "<sortie>" : en/fr/es/de si exactement un message est reconnu.
+# detect_lang "<output>": en/fr/es/de if exactly one message is recognized.
 detect_lang() {
     local out="$1" found="" l
     for l in en fr es de; do
@@ -58,7 +58,7 @@ detect_lang() {
     esac
 }
 
-# check <shell> <langue attendue> [VAR=valeur ...]
+# check <shell> <expected language> [VAR=value ...]
 check() {
     local shell="$1" expected="$2"; shift 2
     local out err rc got desc="$*"
@@ -66,20 +66,20 @@ check() {
     rm -f "$TMP/called"
     out="$(env -i PATH="$TMP/bin:$SYSBIN" HOME="$TMP/home" "$@" "$shell" "$SCRIPT" 2>"$err")"; rc=$?
     got="$(detect_lang "$out")"
-    # bash se plaint lui-meme quand la locale demandee n'est pas installee sur
-    # la machine : ce n'est pas le fait du script, on l'ignore.
+    # bash itself complains when the requested locale is not installed on
+    # the machine: that is not the script's doing, so it is ignored.
     grep -v 'setlocale' "$err" > "$err.filtered" || true
     mv "$err.filtered" "$err"
     if [ "$rc" -ne 0 ]; then
-        fail "[$shell] ${desc:-(aucune variable)} : code de sortie $rc"
+        fail "[$shell] ${desc:-(no variable)}: exit code $rc"
     elif [ -s "$err" ]; then
-        fail "[$shell] ${desc:-(aucune variable)} : message sur stderr : $(head -1 "$err")"
+        fail "[$shell] ${desc:-(no variable)}: message on stderr: $(head -1 "$err")"
     elif [ "$got" != "$expected" ]; then
-        fail "[$shell] ${desc:-(aucune variable)} : langue $got au lieu de $expected"
+        fail "[$shell] ${desc:-(no variable)}: language $got instead of $expected"
     elif ! grep -qxF "  killall nautilus" <<<"$out" || ! grep -qxF "  rm -rf ~/.cache/thumbnails" <<<"$out"; then
-        fail "[$shell] ${desc:-(aucune variable)} : les deux commandes à recopier ne sont pas affichées"
+        fail "[$shell] ${desc:-(no variable)}: the two commands to copy are not displayed"
     elif [ -e "$TMP/called" ]; then
-        fail "[$shell] ${desc:-(aucune variable)} : le script a EXÉCUTÉ une commande : $(cat "$TMP/called")"
+        fail "[$shell] ${desc:-(no variable)}: the script EXECUTED a command: $(cat "$TMP/called")"
     else
         pass
     fi
@@ -90,14 +90,14 @@ for s in dash bash; do
     p="$(command -v "$s" 2>/dev/null || true)"
     [ -n "$p" ] && SHELLS+=("$p")
 done
-# Sans doublon.
+# No duplicates.
 mapfile -t SHELLS < <(printf '%s\n' "${SHELLS[@]}" | awk '!seen[$0]++')
 
-echo "Interpréteurs testés : ${SHELLS[*]}"
+echo "Shells tested: ${SHELLS[*]}"
 
 for sh in "${SHELLS[@]}"; do
-    # Syntaxe.
-    if ! "$sh" -n "$SCRIPT"; then fail "[$sh] erreur de syntaxe"; else pass; fi
+    # Syntax.
+    if ! "$sh" -n "$SCRIPT"; then fail "[$sh] syntax error"; else pass; fi
 
     check "$sh" en
     check "$sh" en LANG=en_US.UTF-8
@@ -115,19 +115,19 @@ for sh in "${SHELLS[@]}"; do
     check "$sh" de LANG=de_AT.UTF-8
     check "$sh" de LANG=de_CH.ISO-8859-1
     check "$sh" de LANG=de_DE@euro
-    # Langues sans traduction : repli sur l'anglais.
+    # Languages without a translation: fall back to English.
     check "$sh" en LANG=it_IT.UTF-8
     check "$sh" en LANG=ja_JP.UTF-8
     check "$sh" en LANG=pt_BR.UTF-8
     check "$sh" en LANG=franglais
-    # Priorite des variables, comme gettext.
+    # Variable priority, like gettext.
     check "$sh" de LC_ALL=de_DE.UTF-8 LANG=fr_FR.UTF-8
     check "$sh" en LC_ALL=C LANG=fr_FR.UTF-8
     check "$sh" es LC_MESSAGES=es_ES.UTF-8 LANG=fr_FR.UTF-8
     check "$sh" fr LC_ALL= LC_MESSAGES= LANG=fr_FR.UTF-8
     check "$sh" de LANGUAGE=de LC_ALL=fr_FR.UTF-8
     check "$sh" es LANGUAGE= LANG=es_ES.UTF-8
-    # LANGUAGE : liste, la premiere langue disponible gagne.
+    # LANGUAGE: a list, the first available language wins.
     check "$sh" de LANGUAGE=de:fr LANG=fr_FR.UTF-8
     check "$sh" de LANGUAGE=it:de LANG=fr_FR.UTF-8
     check "$sh" es LANGUAGE=it:ja:es_ES:fr LANG=en_US.UTF-8
@@ -136,7 +136,7 @@ for sh in "${SHELLS[@]}"; do
     check "$sh" en LANGUAGE=it LANG=fr_FR.UTF-8
     check "$sh" en LANGUAGE=C:fr LANG=fr_FR.UTF-8
     check "$sh" en LANGUAGE=it:C:de
-    # Valeurs bizarres : jamais d'erreur.
+    # Odd values: never an error.
     check "$sh" en 'LANGUAGE=*'
     check "$sh" fr 'LANGUAGE=*:fr'
     check "$sh" en LANGUAGE=::
@@ -144,8 +144,8 @@ done
 
 echo
 if [ "$FAIL" -eq 0 ]; then
-    echo "RÉSULTAT : TOUT EST OK ($PASS vérifications réussies, 0 échec)"
+    echo "RESULT: ALL OK ($PASS checks passed, 0 failures)"
 else
-    echo "RÉSULTAT : $FAIL ÉCHEC(S) ($PASS vérifications réussies)"
+    echo "RESULT: $FAIL FAILURE(S) ($PASS checks passed)"
 fi
 [ "$FAIL" -eq 0 ]

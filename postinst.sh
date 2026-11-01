@@ -1,23 +1,22 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
 #
-# Script post-installation (fpm --after-install), execute en root par dpkg.
-# Deliberement informatif seulement : un script postinst tourne en root et
-# $HOME y vaut /root, pas le dossier personnel de l'utilisateur reel -- on
-# ne touche donc pas a ~/.cache/thumbnails automatiquement (fragile a faire
-# correctement pour l'utilisateur invoquant sudo/apt), on se contente de
-# lui dire quoi faire.
+# Post-install script (fpm --after-install), run as root by dpkg.
+# Deliberately informational only: a postinst script runs as root and $HOME
+# is /root there, not the real user's home folder -- so ~/.cache/thumbnails
+# is not touched automatically (fragile to do correctly for the user who
+# invoked sudo/apt); the script just tells the user what to do.
 #
-# Le message suit la langue du systeme : anglais, francais, espagnol ou
-# allemand, avec repli sur l'anglais. La langue est choisie selon les regles
-# de gettext : on prend la premiere variable non vide parmi LANGUAGE, LC_ALL,
-# LC_MESSAGES et LANG ; elle peut contenir plusieurs langues separees par
-# ":", la premiere langue disponible gagne ; "C" et "POSIX" arretent la
-# recherche (anglais). Le bloc pick_language est volontairement identique a
-# celui du postinst de nautilus-convert-images.
+# The message follows the system language: English, French, Spanish or
+# German, falling back to English. The language is chosen by the rules of
+# gettext: take the first non-empty variable among LANGUAGE, LC_ALL,
+# LC_MESSAGES and LANG; it may hold several languages separated by ":", the
+# first available language wins; "C" and "POSIX" stop the search (English).
+# The pick_language block is deliberately identical to the one in
+# nautilus-convert-images's postinst.
 #
-# Les messages sont en UTF-8 (accents, trema) : une session dont la langue est
-# le francais, l'espagnol ou l'allemand est en UTF-8 sur tout systeme actuel.
+# The messages are in UTF-8 (accents, umlauts): a session whose language is
+# French, Spanish or German is in UTF-8 on any current system.
 set -e
 
 pick_language() {

@@ -60,13 +60,15 @@ staging dans un dossier temporaire avec permissions normalisées. Utilise
 ./build-deb.sh --clean              # supprime le dossier de build et les .deb générés
 ```
 
-Avant la première utilisation, éditez `MAINTAINER` et `URL` en tête du
-script — ce sont des valeurs à personnaliser. Le paquet généré installe
-le binaire dans `/usr/bin/raw-thumbs`, le fichier `raw-thumbs.thumbnailer`
-dans `/usr/share/thumbnailers/`, déclare une dépendance sur
-`libraw23t64` (le paquet fournissant `libraw_r.so` sur Ubuntu 26.04 —
-à vérifier si vous construisez sur une autre distribution), et affiche
-après installation un rappel pour redémarrer Nautilus (dans la langue du système) :
+`MAINTAINER` et `URL`, en haut du script, sont déjà renseignés pour ce
+dépôt ; adaptez-les dans un fork. Le paquet généré installe le binaire dans
+`/usr/bin/raw-thumbs`, le fichier `raw-thumbs.thumbnailer` dans
+`/usr/share/thumbnailers/` et la documentation (README, CHANGELOG, code de
+conduite et licence) dans `/usr/share/doc/raw-thumbs/`, déclare une
+dépendance sur `libraw23t64` (le paquet fournissant `libraw_r.so` sur
+Ubuntu 26.04 — à vérifier si vous construisez sur une autre distribution),
+et affiche après installation un rappel pour redémarrer Nautilus (dans la
+langue du système) :
 
 ```bash
 sudo apt install ./raw-thumbs_<version>_amd64.deb
@@ -177,6 +179,10 @@ créé, pas de panique).
 ## Licence
 
 GPL-3.0-only. Voir [LICENSE](LICENSE).
+
+Le code de conduite ([CODE_OF_CONDUCT.fr.md](CODE_OF_CONDUCT.fr.md)) est le
+_Contributor Covenant_ 3.0, adapté pour ce projet ; il est distribué sous sa
+propre licence, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr).
 
 raw-thumbs est développé par Gilles MAGNEVILLE. Gilles n'est pas développeur
 professionnel — ce projet a été construit avec l'aide de Claude.ai.
