@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   receive fixes and what to expect. It is a file of the repository: the
   package does not ship it. The `README` points to it.
 
+### Changed
+
+- **Source code comments in English**: the comments and documentation
+  comments of `src/main.rs` are now in English. The program does not change,
+  except for one diagnostic message (written on the error output only) that
+  was still in French: `format image inattendu` is now `unexpected image
+  format`.
+
 ## [1.0.4] - 2026-11-01
 
 Maintenance release: no functional change (the program, the `.thumbnailer`
