@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **A security policy**: `SECURITY.md` (English, shown by default on GitHub) and
+  `SECURITY.fr.md` (French). It explains how to report a vulnerability
+  privately (GitHub private vulnerability reporting, or email), which versions
+  receive fixes and what to expect. It is a file of the repository: the
+  package does not ship it. The `README` points to it.
+
 ## [1.0.4] - 2026-11-01
 
 Maintenance release: no functional change (the program, the `.thumbnailer`

@@ -173,6 +173,10 @@ of the file, not by the Rust code), and the full-decode fallback ~6 s.
 Invalid or non-RAW files are handled cleanly (non-zero exit code, no output
 file created, no panic).
 
+## Security
+
+To report a vulnerability, please do not open a public issue: follow the [Security Policy](SECURITY.md).
+
 ## License
 
 GPL-3.0-only. See [LICENSE](LICENSE).
