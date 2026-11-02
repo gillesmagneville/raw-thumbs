@@ -10,6 +10,14 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Ajouté
+
+- **Une politique de sécurité** : `SECURITY.md` (anglais, affiché par défaut sur
+  GitHub) et `SECURITY.fr.md` (français). Elle explique comment signaler une
+  vulnérabilité en privé (signalement privé de GitHub, ou courriel), quelles
+  versions reçoivent des correctifs et ce qu'on peut en attendre. C'est un
+  fichier du dépôt : le paquet ne l'embarque pas. Le `README` y renvoie.
+
 ## [1.0.4] - 2026-11-01
 
 Version de maintenance : aucun changement fonctionnel (le programme, le

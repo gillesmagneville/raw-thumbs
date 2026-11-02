@@ -176,6 +176,10 @@ le code Rust), décodage complet en repli ~6 s. Gestion propre des fichiers
 invalides ou non-RAW (code de sortie non nul, aucun fichier de sortie
 créé, pas de panique).
 
+## Sécurité
+
+Pour signaler une vulnérabilité, merci de ne pas ouvrir d'issue publique : suivez la [Politique de sécurité](SECURITY.fr.md).
+
 ## Licence
 
 GPL-3.0-only. Voir [LICENSE](LICENSE).
