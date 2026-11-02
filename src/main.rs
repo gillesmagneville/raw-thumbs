@@ -1,19 +1,19 @@
-//! Thumbnailer RAW pour Nautilus / GNOME (spec freedesktop.org thumbnailer).
+//! RAW thumbnailer for Nautilus / GNOME (freedesktop.org thumbnailer spec).
 //!
-//! Appelé par Nautilus comme : raw-thumbs %i %o %s
-//!   %i = chemin (ou URI file://) du fichier RAW en entrée
-//!   %o = chemin du PNG de sortie attendu
-//!   %s = taille demandée (le plus grand côté, en pixels)
+//! Called by Nautilus as: raw-thumbs %i %o %s
+//!   %i = path (or file:// URI) of the input RAW file
+//!   %o = path of the expected output PNG
+//!   %s = requested size (the longest side, in pixels)
 //!
-//! Stratégie à deux niveaux :
-//!   1. Extraction de la vignette JPEG embarquée (rapide, couvre la grande
-//!      majorité des fichiers RAW réels).
-//!   2. Repli sur un décodage RAW complet (dématriçage) si le fichier n'a
-//!      pas de vignette embarquée exploitable.
+//! Two-level strategy:
+//!   1. Extraction of the embedded JPEG thumbnail (fast, covers the vast
+//!      majority of real-world RAW files).
+//!   2. Fallback to a full RAW decode (demosaicing) if the file has no
+//!      usable embedded thumbnail.
 //!
-//! Dans les deux cas, c'est libraw (bibliothèque C liée dynamiquement) qui
-//! fait le travail de décodage — ce programme ne fait qu'orchestrer les
-//! appels et gérer le redimensionnement/l'écriture PNG.
+//! In both cases libraw (a dynamically linked C library) does the decoding
+//! work — this program only orchestrates the calls and handles the
+//! resizing and the PNG writing.
 
 use std::env;
 use std::ffi::CString;
@@ -23,7 +23,7 @@ use std::slice;
 use image::{DynamicImage, ImageBuffer, Rgb};
 use libraw_sys as raw;
 
-/// Résultat interne : soit du JPEG déjà encodé, soit un bitmap RGB brut.
+/// Internal result: either an already encoded JPEG, or a raw RGB bitmap.
 enum ExtractedImage {
     Jpeg(Vec<u8>),
     Bitmap {
@@ -40,8 +40,8 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    // Nautilus passe parfois une URI file://, parfois un chemin local direct
-    // selon la version — on gère les deux.
+    // Depending on the version, Nautilus sometimes passes a file:// URI and
+    // sometimes a plain local path — we handle both.
     let input_path = args[1].strip_prefix("file://").unwrap_or(&args[1]);
     let output_path = &args[2];
     let target_size: u32 = match args[3].parse() {
@@ -55,9 +55,9 @@ fn main() -> ExitCode {
     match run(input_path, output_path, target_size) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
-            // Un thumbnailer freedesktop doit échouer silencieusement du
-            // point de vue de l'utilisateur : Nautilus retombe sur l'icône
-            // générique. On garde le message sur stderr pour le débogage.
+            // A freedesktop thumbnailer must fail silently as far as the
+            // user is concerned: Nautilus falls back to the generic icon.
+            // The message is kept on stderr for debugging.
             eprintln!("raw-thumbs: {input_path}: {e}");
             ExitCode::FAILURE
         }
@@ -70,8 +70,8 @@ fn run(input_path: &str, output_path: &str, target_size: u32) -> Result<(), Stri
         return Err("libraw_init failed".into());
     }
 
-    // RAII minimal : on garantit la libération du handle libraw quel que
-    // soit le chemin de sortie (succès ou erreur).
+    // Minimal RAII: guarantees the libraw handle is released whatever the
+    // exit path (success or error).
     struct LibRawGuard(*mut raw::libraw_data_t);
     impl Drop for LibRawGuard {
         fn drop(&mut self) {
@@ -86,53 +86,50 @@ fn run(input_path: &str, output_path: &str, target_size: u32) -> Result<(), Stri
         return Err(format!("libraw_open_file failed (code {open_result})"));
     }
 
-    // Orientation attendue (0 = aucune, 3 = 180°, 5 = 90° anti-horaire,
-    // 6 = 90° horaire — cf. doc LibRaw sur libraw_image_sizes_t.flip),
-    // déjà connue à ce stade puisque open_file() lit tous les tags
-    // d'orientation lors de l'identification du fichier.
+    // Expected orientation (0 = none, 3 = 180°, 5 = 90° counter-clockwise,
+    // 6 = 90° clockwise — see the LibRaw documentation on
+    // libraw_image_sizes_t.flip), already known at this stage since
+    // open_file() reads all the orientation tags while identifying the file.
     let flip = unsafe { (*handle).sizes.flip };
 
-    // --- Niveau 1 : vignette embarquée ---
+    // --- Level 1: embedded thumbnail ---
     if let Some(img) = try_extract_embedded_thumb(handle) {
         if let Ok(dynimg) = decode_extracted(img) {
-            // La vignette embarquée (JPEG en particulier) est le blob tel
-            // que stocké par l'appareil : contrairement à
-            // dcraw_make_mem_image (utilisé au niveau 2), elle n'est PAS
-            // réorientée par libraw en interne. On applique donc nous-mêmes
-            // la rotation ici.
+            // The embedded thumbnail (a JPEG in particular) is the blob as
+            // stored by the camera: unlike dcraw_make_mem_image (used at
+            // level 2), it is NOT reoriented by libraw internally. We
+            // therefore apply the rotation ourselves here.
             let oriented = apply_orientation(dynimg, flip);
             return save_resized(oriented, target_size, output_path);
         }
-        // La vignette embarquée existe mais n'a pas pu être décodée
-        // (format exotique/corrompu) : on retente le chemin complet plutôt
-        // que d'abandonner.
+        // The embedded thumbnail exists but could not be decoded (exotic or
+        // corrupt format): we try the full path rather than give up.
     }
 
-    // --- Niveau 2 : décodage RAW complet (repli) ---
-    // Pas d'appel à apply_orientation ici : dcraw_make_mem_image applique
-    // déjà la rotation lui-même en phase de sortie (comportement par
-    // défaut de libraw, user_flip valant -1 tant qu'on ne le modifie pas).
-    // L'appliquer une deuxième fois tournerait l'image deux fois.
+    // --- Level 2: full RAW decode (fallback) ---
+    // No call to apply_orientation here: dcraw_make_mem_image already
+    // applies the rotation itself in its output phase (libraw's default
+    // behaviour, user_flip being -1 as long as we do not change it).
+    // Applying it a second time would rotate the image twice.
     let img = full_decode(handle)?;
     let dynimg = decode_extracted(img).map_err(|e| format!("full decode: {e}"))?;
     save_resized(dynimg, target_size, output_path)
 }
 
-/// Applique la rotation indiquée par `libraw_image_sizes_t.flip` à une
-/// vignette extraite telle quelle (chemin "vignette embarquée" uniquement —
-/// voir le commentaire dans `run()` pour pourquoi le chemin décodage complet
-/// n'en a pas besoin).
+/// Applies the rotation given by `libraw_image_sizes_t.flip` to a thumbnail
+/// extracted as is (the "embedded thumbnail" path only — see the comment in
+/// `run()` for why the full decode path does not need it).
 fn apply_orientation(img: DynamicImage, flip: i32) -> DynamicImage {
     match flip {
         3 => img.rotate180(),
-        5 => img.rotate270(), // 90° anti-horaire
-        6 => img.rotate90(),  // 90° horaire
+        5 => img.rotate270(), // 90° counter-clockwise
+        6 => img.rotate90(),  // 90° clockwise
         _ => img,
     }
 }
 
-/// Tente d'extraire la vignette JPEG/bitmap embarquée dans le fichier RAW.
-/// Retourne None si aucune vignette exploitable n'est présente.
+/// Tries to extract the JPEG/bitmap thumbnail embedded in the RAW file.
+/// Returns None if no usable thumbnail is present.
 fn try_extract_embedded_thumb(handle: *mut raw::libraw_data_t) -> Option<ExtractedImage> {
     let unpack_result = unsafe { raw::libraw_unpack_thumb(handle) };
     if unpack_result != raw::LIBRAW_SUCCESS as i32 {
@@ -150,8 +147,8 @@ fn try_extract_embedded_thumb(handle: *mut raw::libraw_data_t) -> Option<Extract
     result
 }
 
-/// Décodage RAW complet (dématriçage) — chemin lent, utilisé uniquement en
-/// repli quand aucune vignette embarquée n'est disponible.
+/// Full RAW decode (demosaicing) — the slow path, used only as a fallback
+/// when no embedded thumbnail is available.
 fn full_decode(handle: *mut raw::libraw_data_t) -> Result<ExtractedImage, String> {
     let r = unsafe { raw::libraw_unpack(handle) };
     if r != raw::LIBRAW_SUCCESS as i32 {
@@ -168,31 +165,31 @@ fn full_decode(handle: *mut raw::libraw_data_t) -> Result<ExtractedImage, String
         return Err(format!("libraw_dcraw_make_mem_image failed (code {errc})"));
     }
 
-    let result = extract_processed_image(img_ptr).ok_or_else(|| "format image inattendu".to_string());
+    let result = extract_processed_image(img_ptr).ok_or_else(|| "unexpected image format".to_string());
     unsafe { raw::libraw_dcraw_clear_mem(img_ptr) };
     result
 }
 
-/// Copie les données utiles d'un `libraw_processed_image_t*` avant que
-/// libraw ne libère la mémoire sous-jacente.
+/// Copies the useful data of a `libraw_processed_image_t*` before libraw
+/// frees the underlying memory.
 fn extract_processed_image(ptr: *mut raw::libraw_processed_image_t) -> Option<ExtractedImage> {
     let img = unsafe { &*ptr };
     let data_ptr = img.data.as_ptr();
     let data_len = img.data_size as usize;
     let data_slice = unsafe { slice::from_raw_parts(data_ptr, data_len) };
 
-    // L'énum LibRaw_image_formats du crate ne dérive pas PartialEq : on
-    // compare donc sur le discriminant brut (1 = JPEG, 2 = BITMAP, cf.
-    // libraw_const.h) plutôt que par filtrage de motif.
-    // Lecture du discriminant brut via un pointeur (l'énum #[repr(C)] a le
-    // même layout qu'un c_int) puisque le type ne dérive pas Copy.
+    // The crate's LibRaw_image_formats enum does not derive PartialEq: we
+    // therefore compare on the raw discriminant (1 = JPEG, 2 = BITMAP, see
+    // libraw_const.h) rather than by pattern matching.
+    // The raw discriminant is read through a pointer (the #[repr(C)] enum
+    // has the same layout as a c_int) since the type does not derive Copy.
     let image_type_raw = unsafe { *(&img.image_type as *const raw::LibRaw_image_formats as *const i32) };
     match image_type_raw {
         1 => Some(ExtractedImage::Jpeg(data_slice.to_vec())),
         2 => {
-            // Bitmap RGB brut. On ne gère que le cas standard 8 bits/canal,
-            // 3 couleurs (RGB) — c'est le cas de très large majorité en
-            // sortie de dcraw_process avec les réglages par défaut.
+            // Raw RGB bitmap. Only the standard case is handled: 8 bits per
+            // channel, 3 colors (RGB) — the overwhelming majority of the
+            // output of dcraw_process with the default settings.
             if img.colors != 3 || img.bits != 8 {
                 return None;
             }

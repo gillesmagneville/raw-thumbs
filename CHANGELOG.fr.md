@@ -18,6 +18,14 @@ et ce projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
   versions reçoivent des correctifs et ce qu'on peut en attendre. C'est un
   fichier du dépôt : le paquet ne l'embarque pas. Le `README` y renvoie.
 
+### Modifié
+
+- **Commentaires du code source en anglais** : les commentaires et les
+  commentaires de documentation de `src/main.rs` sont maintenant en anglais.
+  Le programme ne change pas, à une exception près : un message de
+  diagnostic (écrit uniquement sur la sortie d'erreur) était encore en
+  français ; `format image inattendu` devient `unexpected image format`.
+
 ## [1.0.4] - 2026-11-01
 
 Version de maintenance : aucun changement fonctionnel (le programme, le
